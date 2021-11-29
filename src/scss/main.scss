@@ -1,0 +1,17 @@
+@use 'utilities/container';
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+nav, footer {
+    width: 800px;
+    padding: 1rem 0;
+}
+
+canvas {
+    display: block;
+    margin: 0 auto;
+}
