@@ -2,6 +2,8 @@
 import PlayScene from './play-scene';
 import PreloadScene from './preload-scene';
 import MenuScene from './menu-scene';
+import StartScene from './startmenu';
+import TestScene from './testing';
 
 // spelets config
 const config = {
@@ -17,7 +19,7 @@ const config = {
             debug: true
         }
     },
-    scene: [PreloadScene, PlayScene, MenuScene],
+    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene],
     parent: 'game'
 };
 
