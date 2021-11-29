@@ -1,9 +1,17 @@
+var snowballs;
+
+
 class TestScene extends Phaser.Scene {
     constructor() {
         super('TestScene');
     }
 
     create() {
+
+        // Key Listeners
+        this.keyObjE = this.input.keyboard.addKey('E'); //For throwing snowballs
+
+
         // variabel för att hålla koll på hur många gånger vi spikat oss själva
         this.spiked = 0;
 
@@ -93,10 +101,21 @@ class TestScene extends Phaser.Scene {
         this.events.on('resume', function () {
             console.log('Play scene resumed');
         });
+        // Physics groups
+        snowballs = this.physics.add.group({
+            timer: 30
+        });
     }
 
     // play scenens update metod
     update() {
+        // Throw snowball
+        if(this.keyObjE.isDown) {
+            var ball = snowballs.create(this.player.x, this.player.y, 'snowball').setScale(0.01);
+            ball.setBounce(1);
+            ball.setCollideWorldBounds(false);
+            ball.setVelocity(300, -300);
+        }
         // för pause
         if (this.keyObj.isDown) {
             // pausa nuvarande scen
