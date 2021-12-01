@@ -5,8 +5,9 @@
 Allt detta görs som koncept för jag har inte level/design/sprites för tillfället.
 Kommer bara använda Frejs gamla tråkiga sprites. 
 
-1. Movement - typ klar, har basic movement sedan tidigare.
-2. Kasta snöboll - Klar.
-3. Mouse listener för att kasta mot musen.
-4. Varm choklad mechanicen
-5. Collectibles
+1. [/] Movement - typ klar, har basic movement sedan tidigare.
+2. [ ] Kasta snöboll - Kasta i mer av en arc istället för rakt mot musen. 
+3. [/] Mouse listener för att kasta mot musen. - Klar.
+4. [/] Varm choklad mechanicen
+5. [ ] Collectibles
+6. [/] Freezing mechanic.

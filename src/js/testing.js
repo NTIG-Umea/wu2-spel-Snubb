@@ -1,6 +1,3 @@
-var snowballs;
-
-
 class TestScene extends Phaser.Scene {
     constructor() {
         super('TestScene');
@@ -11,10 +8,14 @@ class TestScene extends Phaser.Scene {
         // Key Listeners
         this.keyObjE = this.input.keyboard.addKey('E'); //For throwing snowballs
 
-
+        //#region Variebellåda
         // variabel för att hålla koll på hur många gånger vi spikat oss själva
         this.spiked = 0;
 
+        this.freezing = 1000; // hur lång tid innan man fryser.
+
+        this.chocolateTimer = 500; //spawns chocolate every x frames
+        //#endregion
         // ladda spelets bakgrundsbild, statisk
         // setOrigin behöver användas för att den ska ritas från top left
         this.add.image(0, 0, 'background').setOrigin(0, 0);
@@ -46,7 +47,7 @@ class TestScene extends Phaser.Scene {
 
         // skapa en spelare och ge den studs
         this.player = this.physics.add.sprite(50, 300, 'player');
-        this.player.setBounce(0.1);
+        this.player.setBounce(0);
         this.player.setCollideWorldBounds(true);
 
         // skapa en fysik-grupp
@@ -101,21 +102,89 @@ class TestScene extends Phaser.Scene {
         this.events.on('resume', function () {
             console.log('Play scene resumed');
         });
-        // Physics groups
-        snowballs = this.physics.add.group({
-            timer: 30
+        //#region Physics groups
+        //#region Snowballs
+        this.snowballs = this.physics.add.group({
+            time: 240
         });
+        this.physics.add.collider(this.snowballs, this.platforms);
+        this.physics.add.collider(this.snowballs, this.player);
+        //#endregion
+        //#region Chocolate
+        this.chocolate = this.physics.add.group({
+
+        });
+        this.physics.add.collider(this.chocolate, this.platforms);
+        this.physics.add.overlap(this.chocolate, this.player, collectChoc, null, this);
+
+        function collectChoc(player, chocolate) {
+            chocolate.disableBody(true, true);
+            this.freezing = 1000;
+        }
+        //#endregion
+        //#endregion
+    
+        
     }
 
     // play scenens update metod
     update() {
-        // Throw snowball
-        if(this.keyObjE.isDown) {
-            var ball = snowballs.create(this.player.x, this.player.y, 'snowball').setScale(0.01);
-            ball.setBounce(1);
-            ball.setCollideWorldBounds(false);
-            ball.setVelocity(300, -300);
+        //#region Chocolate Spawner
+        if(this.chocolateTimer <= 0) {
+            this.chocolateTimer = 500;
+            console.log("Spawned chocolate");
+            var chocolatee = this.chocolate.create(Phaser.Math.FloatBetween(0, 896), 0, 'snowball').setScale(0.03);
+            chocolatee.setGravityY(800);
+        } else {
+            this.chocolateTimer--;
         }
+        //#endregion
+        
+        //#region freezing mechanic
+        if(this.freezing > 0) {
+            this.freezing--;   
+        }
+        if(this.freezing < 1000 && this.freezing > 800) {
+            this.player.setTint(0x96e9ff);
+        } else if(this.freezing < 800 && this.freezing > 600) {
+            this.player.setTint(0x6ae0ff);
+        } else if(this.freezing < 600 && this.freezing > 400) {
+            this.player.setTint(0x36d6ff);
+        } else if(this.freezing < 400 && this.freezing > 200) {
+            this.player.setTint(0x00cbff);
+        } else if(this.freezing < 200 && this.freezing > 0) {
+            this.player.setTint(0x00a5d0);
+        } else {
+            this.player.setTint(0x000000);
+        }
+        //#endregion
+           
+        //#region Throw snowball
+        if(this.keyObjE.isDown) {
+            
+            var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball').setScale(0.03);
+            var angle = Math.atan2((this.game.input.mousePointer.y - ball.y), (this.game.input.mousePointer.x - ball.x));
+            ball.setGravityY(800);
+            ball.setTint(0xffff00);
+            ball.setDataEnabled();
+            ball.setData({time: 240})
+            ball.setBounce(1);
+            ball.setCollideWorldBounds(true);
+            ball.setVelocityY(Math.sin(angle)*800);
+            ball.setVelocityX(Math.cos(angle)*800);
+        }
+        this.snowballs.children.iterate(function(child) {
+            if(child != null) {
+                if(child.getData('time') == 0) {
+                    child.destroy();
+                } else {
+                    child.data.values.time -= 1;
+                }
+            }
+        }); 
+        //#endregion
+        
+        //#region Pause
         // för pause
         if (this.keyObj.isDown) {
             // pausa nuvarande scen
@@ -123,7 +192,9 @@ class TestScene extends Phaser.Scene {
             // starta menyscenene
             this.scene.launch('MenuScene');
         }
+        //#endregion
 
+        //#region Movement
         // följande kod är från det tutorial ni gjort tidigare
         // Control the player with left or right keys
         if (this.cursors.left.isDown) {
@@ -163,7 +234,9 @@ class TestScene extends Phaser.Scene {
             this.player.setFlipX(true);
         }
     }
+    //#endregion
 
+       
     // metoden updateText för att uppdatera overlaytexten i spelet
     updateText() {
         this.text.setText(
