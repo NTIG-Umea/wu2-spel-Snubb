@@ -11,4 +11,4 @@ Kommer bara använda Frejs gamla tråkiga sprites.
 4. [/] Varm choklad mechanicen
 5. [ ] Collectibles
 6. [/] Freezing mechanic.
-7. [/] Kasta snöboll i en arc istället för rakt mot musen.
+7. [ ] Kasta snöboll i en arc istället för rakt mot musen.
