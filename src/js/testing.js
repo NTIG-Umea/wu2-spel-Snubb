@@ -7,6 +7,7 @@ class TestScene extends Phaser.Scene {
 
         // Key Listeners
         this.keyObjE = this.input.keyboard.addKey('E'); //For throwing snowballs
+        this.keyObjQ = this.input.keyboard.addKey('Q'); // första ability
 
         //#region Variebellåda
         // variabel för att hålla koll på hur många gånger vi spikat oss själva
@@ -17,6 +18,8 @@ class TestScene extends Phaser.Scene {
         this.chocolateTimer = 500; //spawns chocolate every x frames
 
         this.shootCooldown = 0; // cooldown for boss shooting
+
+        this.bigCooldown = 100;
         //#endregion
         // ladda spelets bakgrundsbild, statisk
         // setOrigin behöver användas för att den ska ritas från top left
@@ -129,6 +132,21 @@ class TestScene extends Phaser.Scene {
                 }
             });
         }
+
+        this.bigBalls = this.physics.add.group();
+
+        this.physics.add.overlap(this.bigBalls, this.foe, hurtFoeBig, null, this);
+        function hurtFoeBig(foe, bigBall) {
+            var vineBoom = this.sound.add('vineBoom').setRate(1).play();
+            bigBall.destroy();
+            foe.setTint(0xff4d5e);
+            this.time.addEvent({
+                delay: 30,
+                callback: ()=>{
+                    foe.clearTint();
+                }
+            });
+        }
         //#endregion
         //#region Chocolate
         this.chocolate = this.physics.add.group({
@@ -146,7 +164,12 @@ class TestScene extends Phaser.Scene {
         this.enemySnowBall = this.physics.add.group();
         this.physics.add.overlap(this.enemySnowBall, this.player, hurt, null, this);
         function hurt(player, ball) {
-            var oof = this.sound.add('oof').play();
+            var oof = this.sound.add('oof', {
+                volume: 1,
+                seek: 1
+            });
+
+            oof.play();
             ball.destroy();
             player.setTint(0xFF0000);
         }
@@ -218,6 +241,33 @@ class TestScene extends Phaser.Scene {
                 }
             }
         }); 
+        if(this.bigCooldown > 0) {
+            this.bigCooldown--;
+        }
+
+        if(this.keyObjQ.isDown && this.bigCooldown == 0) {
+            this.bigCooldown = 100;
+            var bigBall = this.bigBalls.create(this.player.body.x, this.player.body.y, 'snowball').setScale(0.01);
+            bigBall.body.setAllowGravity(false);
+            
+            
+        }
+        var foeX = this.foe.body.x + this.foe.width/2;
+        var foeY = this.foe.body.y + this.foe.height/2;
+        var playerX = this.player.body.x + this.player.width/2;
+        var playerY = this.player.body.y + this.player.height/2;
+        this.bigBalls.children.iterate(function(child) {
+            if(child.scale > 0.1) {   
+                var foeAngle = Math.atan2((foeY - child.y), (foeX - child.x));             
+                child.setVelocityY(Math.sin(foeAngle)*500);
+                child.setVelocityX(Math.cos(foeAngle)*500);
+
+            } else {
+                child.setScale(child.scale + 0.001);
+                child.x = playerX;
+                child.y = playerY;
+            }
+        });
         //#endregion
         
         //#region Pause
