@@ -14,4 +14,5 @@ Kommer bara använda Frejs gamla tråkiga sprites.
 7. [ ] Kasta snöboll i en arc istället för rakt mot musen.
 8. [ ] Större map och camera follow
 9. [ ] Någon form av lavin(kräver större map)
-10. [ ] (Efter jag är klar med allt annat)Massa fina abilities eller andra random roliga saker.
+10. [ ] Tomte boss
+11. [ ] (Efter jag är klar med allt annat)Massa fina abilities eller andra random roliga saker.

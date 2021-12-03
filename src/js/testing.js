@@ -45,10 +45,15 @@ class TestScene extends Phaser.Scene {
         // );
         // platforms.setCollision(1, true, true);
 
+
         // skapa en spelare och ge den studs
         this.player = this.physics.add.sprite(50, 300, 'player');
         this.player.setBounce(0);
         this.player.setCollideWorldBounds(true);
+
+        // Tomtegubben
+        this.foe = this.physics.add.sprite(400, 40, 'foe');
+        this.foe.body.setAllowGravity(false);
 
         // skapa en fysik-grupp
         this.spikes = this.physics.add.group({
@@ -108,7 +113,20 @@ class TestScene extends Phaser.Scene {
             time: 240
         });
         this.physics.add.collider(this.snowballs, this.platforms);
-        this.physics.add.collider(this.snowballs, this.player);
+        this.ballCooldown = 0;
+
+        this.physics.add.overlap(this.snowballs, this.foe, hurtFoe, null, this);
+        function hurtFoe(foe, ball) {
+            var vineBoom = this.sound.add('vineBoom').play();
+            ball.destroy();
+            foe.setTint(0xff4d5e);
+            this.time.addEvent({
+                delay: 30,
+                callback: ()=>{
+                    foe.clearTint();
+                }
+            });
+        }
         //#endregion
         //#region Chocolate
         this.chocolate = this.physics.add.group({
@@ -129,6 +147,9 @@ class TestScene extends Phaser.Scene {
 
     // play scenens update metod
     update() {
+        
+
+
         //#region Chocolate Spawner
         if(this.chocolateTimer <= 0) {
             this.chocolateTimer = 500;
@@ -160,8 +181,11 @@ class TestScene extends Phaser.Scene {
         //#endregion
            
         //#region Throw snowball
-        if(this.keyObjE.isDown) {
-            
+        if(this.ballCooldown > 0) {
+            this.ballCooldown--;
+        }
+        if(this.keyObjE.isDown && this.ballCooldown == 0) {
+            this.ballCooldown = 10;
             var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball').setScale(0.03);
             var angle = Math.atan2((this.game.input.mousePointer.y - ball.y), (this.game.input.mousePointer.x - ball.x));
             ball.setGravityY(800);
@@ -170,8 +194,8 @@ class TestScene extends Phaser.Scene {
             ball.setData({time: 240})
             ball.setBounce(1);
             ball.setCollideWorldBounds(true);
-            ball.setVelocityY(Math.sin(angle)*800);
-            ball.setVelocityX(Math.cos(angle)*800);
+            ball.setVelocityY(Math.sin(angle)*1200);
+            ball.setVelocityX(Math.cos(angle)*1200);
         }
         this.snowballs.children.iterate(function(child) {
             if(child != null) {
@@ -233,9 +257,31 @@ class TestScene extends Phaser.Scene {
             // otherwise, make them face the other side
             this.player.setFlipX(true);
         }
-    }
+    
     //#endregion
+   
+        //#region tomeAI
+        
+        if(this.foe.body.x > this.player.body.x + 60 && this.foe.body.velocity.x > - 150) {
+            this.foe.setVelocityX(this.foe.body.velocity.x - 4)
+        } else if(this.foe.body.x > this.player.body.x && this.foe.body.velocity.x > - 50){
+            this.foe.setVelocityX(this.foe.body.velocity.x - 2)
+        } else {
+            this.foe.setVelocityX(this.foe.body.velocity.x + 4)
+        }
+        
+        if(this.foe.body.x < this.player.body.x - 60 && this.foe.body.velocity.x < 150) {
+            this.foe.setVelocityX(this.foe.body.velocity.x + 4)
+        } else if(this.foe.body.x < this.player.body.x && this.foe.body.velocity.x < 50){
+            this.foe.setVelocityX(this.foe.body.velocity.x + 2)
+        } else {
+            this.foe.setVelocityX(this.foe.body.velocity.x - 4)
+        }
+        
+        //#endregion
 
+    }
+        
        
     // metoden updateText för att uppdatera overlaytexten i spelet
     updateText() {
@@ -244,6 +290,7 @@ class TestScene extends Phaser.Scene {
         );
     }
 
+    
     // när spelaren landar på en spik, då körs följande metod
     playerHit(player, spike) {
         this.spiked++;
