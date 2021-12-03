@@ -20,6 +20,10 @@ class TestScene extends Phaser.Scene {
         this.shootCooldown = 0; // cooldown for boss shooting
 
         this.bigCooldown = 100;
+
+        this.foeHP = 1000;
+
+        this.foeEnraged = false;
         //#endregion
         // ladda spelets bakgrundsbild, statisk
         // setOrigin behöver användas för att den ska ritas från top left
@@ -122,13 +126,19 @@ class TestScene extends Phaser.Scene {
 
         this.physics.add.overlap(this.snowballs, this.foe, hurtFoe, null, this);
         function hurtFoe(foe, ball) {
-            var vineBoom = this.sound.add('vineBoom').play();
+            this.foeHP -= 10;
+            //var vineBoom = this.sound.add('vineBoom').play();
             ball.destroy();
             foe.setTint(0xff4d5e);
             this.time.addEvent({
                 delay: 30,
                 callback: ()=>{
-                    foe.clearTint();
+                    if(!this.foeEnraged) {
+
+                        foe.clearTint();
+                     } else {
+                         foe.setTint(0x00FF00);
+                     }
                 }
             });
         }
@@ -137,13 +147,20 @@ class TestScene extends Phaser.Scene {
 
         this.physics.add.overlap(this.bigBalls, this.foe, hurtFoeBig, null, this);
         function hurtFoeBig(foe, bigBall) {
-            var vineBoom = this.sound.add('vineBoom').setRate(1).play();
+            this.foeHP -= 50;
+            //var vineBoom = this.sound.add('vineBoom').setRate(1).play();
             bigBall.destroy();
             foe.setTint(0xff4d5e);
             this.time.addEvent({
                 delay: 30,
                 callback: ()=>{
-                    foe.clearTint();
+                    if(!this.foeEnraged) {
+
+                       foe.clearTint();
+                    } else {
+                        foe.setTint(0x00FF00);
+                    }
+
                 }
             });
         }
@@ -169,7 +186,7 @@ class TestScene extends Phaser.Scene {
                 seek: 1
             });
 
-            oof.play();
+            //oof.play();
             ball.destroy();
             player.setTint(0xFF0000);
         }
@@ -323,6 +340,13 @@ class TestScene extends Phaser.Scene {
     //#endregion
    
         //#region tomeAI
+        if(this.foeHP <= 500 && !this.foeEnraged) {
+            this.foeEnraged = true;
+            this.foe.setTint(0x00FF00);
+            var bing = this.sound.add('bing');
+            bing.play();
+        }
+
         if(this.shootCooldown > 0) {
             this.shootCooldown--;
         }

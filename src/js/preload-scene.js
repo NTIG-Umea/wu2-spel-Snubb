@@ -6,6 +6,7 @@ class PreloadScene extends Phaser.Scene {
     preload() {
         // säg åt phaser att lägga till /assets i alla paths
         this.load.setBaseURL('/assets');
+        this.load.audio('bing', '/sounds/bing.mp3');
         this.load.audio('oof', '/sounds/oof.mp3');
         this.load.audio('vineBoom', '/sounds/VineBoom.mp3');
         this.load.image('background', '/images/background.png');

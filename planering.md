@@ -14,5 +14,5 @@ Kommer bara använda Frejs gamla tråkiga sprites.
 7. [ ] Kasta snöboll i en arc istället för rakt mot musen.
 8. [ ] Större map och camera follow
 9. [ ] Någon form av lavin(kräver större map)
-10. [ ] Tomte boss
+10. [\] Tomte boss - mycket gjort men bossfighten kommer bero av bossarenan(tis a platformer after all) vilket jag inte fått än.
 11. [ ] (Efter jag är klar med allt annat)Massa fina abilities eller andra random roliga saker.
