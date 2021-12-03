@@ -15,6 +15,8 @@ class TestScene extends Phaser.Scene {
         this.freezing = 1000; // hur lång tid innan man fryser.
 
         this.chocolateTimer = 500; //spawns chocolate every x frames
+
+        this.shootCooldown = 0; // cooldown for boss shooting
         //#endregion
         // ladda spelets bakgrundsbild, statisk
         // setOrigin behöver användas för att den ska ritas från top left
@@ -140,6 +142,16 @@ class TestScene extends Phaser.Scene {
             this.freezing = 1000;
         }
         //#endregion
+        //#region enemySnowBalls
+        this.enemySnowBall = this.physics.add.group();
+        this.physics.add.overlap(this.enemySnowBall, this.player, hurt, null, this);
+        function hurt(player, ball) {
+            var oof = this.sound.add('oof').play();
+            ball.destroy();
+            player.setTint(0xFF0000);
+        }
+        //#endregion
+        
         //#endregion
     
         
@@ -261,6 +273,9 @@ class TestScene extends Phaser.Scene {
     //#endregion
    
         //#region tomeAI
+        if(this.shootCooldown > 0) {
+            this.shootCooldown--;
+        }
         
         if(this.foe.body.x > this.player.body.x + 60 && this.foe.body.velocity.x > - 150) {
             this.foe.setVelocityX(this.foe.body.velocity.x - 4)
@@ -276,6 +291,14 @@ class TestScene extends Phaser.Scene {
             this.foe.setVelocityX(this.foe.body.velocity.x + 2)
         } else {
             this.foe.setVelocityX(this.foe.body.velocity.x - 4)
+        }
+
+        if(this.foe.body.x - this.player.body.x < 60 && this.shootCooldown == 0) {
+            this.shootCooldown = 60;
+            var enemyBullet = this.enemySnowBall.create(this.foe.body.x + this.foe.width/2, this.foe.body.y + this.foe.height/2, 'snowball').setScale(0.02);
+            enemyBullet.setTint(0xFF0000);
+            enemyBullet.setVelocityY(50);
+                
         }
         
         //#endregion
