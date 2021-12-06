@@ -1,6 +1,7 @@
 class TestScene extends Phaser.Scene {
     constructor() {
         super('TestScene');
+        this.player;
     }
 
     create() {
@@ -203,8 +204,8 @@ class TestScene extends Phaser.Scene {
         //#endregion
         
         //#endregion
-    
-        
+        this.white = this.add.image(0, 0, 'white').setOrigin(0, 0);
+        this.white.alpha = 0;
     }
 
     // play scenens update metod
@@ -231,16 +232,22 @@ class TestScene extends Phaser.Scene {
         }
         if(this.freezing < 1000 && this.freezing > 800) {
             this.player.setTint(0x96e9ff);
+            this.white.alpha = 0.2;
         } else if(this.freezing < 800 && this.freezing > 600) {
             this.player.setTint(0x6ae0ff);
+            this.white.alpha = 0.4;
         } else if(this.freezing < 600 && this.freezing > 400) {
             this.player.setTint(0x36d6ff);
+            this.white.alpha = 0.6;
         } else if(this.freezing < 400 && this.freezing > 200) {
             this.player.setTint(0x00cbff);
+            this.white.alpha = 0.8;
         } else if(this.freezing < 200 && this.freezing > 0) {
             this.player.setTint(0x00a5d0);
+            this.white.alpha = 0.9;
         } else {
             this.player.setTint(0x000000);
+            this.white.alpha = 1;
         }
         //#endregion
            
@@ -389,6 +396,8 @@ class TestScene extends Phaser.Scene {
         
         //#endregion
 
+        
+
     }
         
        
@@ -398,6 +407,8 @@ class TestScene extends Phaser.Scene {
             `Arrow keys to move. Space to jump. W to pause. Spiked: ${this.spiked}`
         );
     }
+
+    
 
     
     // när spelaren landar på en spik, då körs följande metod
