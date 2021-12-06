@@ -94,6 +94,9 @@ class TestScene extends Phaser.Scene {
             this
         );
 
+        //this.rock = this.physics.add.sprite(-100, -100, 'rock');
+        //this.rock.body.setAllowGravity(false);
+
         // krocka med platforms lagret
         this.physics.add.collider(this.player, this.platforms);
 
@@ -124,10 +127,19 @@ class TestScene extends Phaser.Scene {
         this.physics.add.collider(this.snowballs, this.platforms);
         this.ballCooldown = 0;
 
+        this.theRock = this.physics.add.group();
         this.physics.add.overlap(this.snowballs, this.foe, hurtFoe, null, this);
         function hurtFoe(foe, ball) {
+            
             this.foeHP -= 10;
-            //var vineBoom = this.sound.add('vineBoom').play();
+            var vineBoom = this.sound.add('vineBoom').play();
+            //this.rock = this.physics.add.sprite(foe.x + foe.width/2, foe.y + foe.height/2, 'rock');
+            var rock = this.theRock.create(foe.x, foe.y , 'rock');
+            rock.setScale(0.5);
+            rock.body.setAllowGravity(false);
+            rock.alpha = 1;
+            
+            
             ball.destroy();
             foe.setTint(0xff4d5e);
             this.time.addEvent({
@@ -155,12 +167,10 @@ class TestScene extends Phaser.Scene {
                 delay: 30,
                 callback: ()=>{
                     if(!this.foeEnraged) {
-
                        foe.clearTint();
                     } else {
                         foe.setTint(0x00FF00);
                     }
-
                 }
             });
         }
@@ -199,7 +209,9 @@ class TestScene extends Phaser.Scene {
 
     // play scenens update metod
     update() {
-        
+        this.theRock.children.iterate(function (child){
+            child.alpha -= 0.05;
+        });
 
 
         //#region Chocolate Spawner

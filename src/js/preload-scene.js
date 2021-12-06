@@ -12,6 +12,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('background', '/images/background.png');
         this.load.image('spike', '/images/spike.png');
         this.load.image('snowball', './images/snowball.png');
+        this.load.image('rock', './images/rock.png');
         this.load.atlas(
             'player',
             '/images/jefrens_hero.png',
