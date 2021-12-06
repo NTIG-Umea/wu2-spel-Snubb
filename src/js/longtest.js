@@ -1,10 +1,13 @@
-class TestScene extends Phaser.Scene {
+class TestLongScene extends Phaser.Scene {
     constructor() {
-        super('TestScene');
-        this.player;
+        super('TestLongScene');
     }
 
     create() {
+        this.cameras.main.setSize(900, 600);
+        this.cameras.main.setBounds(0,0, 3000, 600);
+
+
 
         // Key Listeners
         this.keyObjE = this.input.keyboard.addKey('E'); //For throwing snowballs
@@ -31,9 +34,9 @@ class TestScene extends Phaser.Scene {
         this.add.image(0, 0, 'background').setOrigin(0, 0);
 
         // skapa en tilemap från JSON filen vi preloadade
-        const map = this.make.tilemap({ key: 'map' });
+        const map = this.make.tilemap({ key: 'long_map', tileWidth: 32, tileHeight: 32 });
         // ladda in tilesetbilden till vår tilemap
-        const tileset = map.addTilesetImage('jefrens_platformer', 'tiles');
+        const tileset = map.addTilesetImage('32_tileset', 'tiles');
 
         // initiera animationer, detta är flyttat till en egen metod
         // för att göra create metoden mindre rörig
@@ -76,7 +79,7 @@ class TestScene extends Phaser.Scene {
         // i tilemappen finns det ett lager Spikes
         // som innehåller spikarnas position
         console.log(this.platforms);
-        map.getObjectLayer('Spikes').objects.forEach((spike) => {
+        /*map.getObjectLayer('Spikes').objects.forEach((spike) => {
             // iterera över spikarna, skapa spelobjekt
             const spikeSprite = this.spikes
                 .create(spike.x, spike.y - spike.height, 'spike')
@@ -84,16 +87,16 @@ class TestScene extends Phaser.Scene {
             spikeSprite.body
                 .setSize(spike.width, spike.height - 20)
                 .setOffset(0, 20);
-        });
+        });*/
         // lägg till en collider mellan spelare och spik
         // om en kollision sker, kör callback metoden playerHit
-        this.physics.add.collider(
+        /*this.physics.add.collider(
             this.player,
-            this.spikes,
+            //this.spikes,
             this.playerHit,
             null,
             this
-        );
+        );*/
 
         //this.rock = this.physics.add.sprite(-100, -100, 'rock');
         //this.rock.body.setAllowGravity(false);
@@ -214,6 +217,8 @@ class TestScene extends Phaser.Scene {
             child.alpha -= 0.05;
         });
 
+        this.cameras.main.startFollow(this.player);
+
 
         //#region Chocolate Spawner
         if(this.chocolateTimer <= 0) {
@@ -232,22 +237,22 @@ class TestScene extends Phaser.Scene {
         }
         if(this.freezing < 1000 && this.freezing > 800) {
             this.player.setTint(0x96e9ff);
-            this.white.alpha = 0.2;
+            //this.white.alpha = 0.2;
         } else if(this.freezing < 800 && this.freezing > 600) {
             this.player.setTint(0x6ae0ff);
-            this.white.alpha = 0.4;
+            //this.white.alpha = 0.4;
         } else if(this.freezing < 600 && this.freezing > 400) {
             this.player.setTint(0x36d6ff);
-            this.white.alpha = 0.6;
+            //this.white.alpha = 0.6;
         } else if(this.freezing < 400 && this.freezing > 200) {
             this.player.setTint(0x00cbff);
-            this.white.alpha = 0.8;
+            //this.white.alpha = 0.8;
         } else if(this.freezing < 200 && this.freezing > 0) {
             this.player.setTint(0x00a5d0);
-            this.white.alpha = 0.9;
+            //this.white.alpha = 0.9;
         } else {
             this.player.setTint(0x000000);
-            this.white.alpha = 1;
+            //this.white.alpha = 1;
         }
         //#endregion
            
@@ -456,4 +461,4 @@ class TestScene extends Phaser.Scene {
     }
 }
 
-export default TestScene;
+export default TestLongScene;

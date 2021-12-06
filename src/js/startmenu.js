@@ -1,4 +1,5 @@
 import TestScene from "./testing";
+import TestLongScene from "./longtest";
 
 var testTrigger = false;
 var lvl1trigger = false;
@@ -44,7 +45,7 @@ class PreloadScene extends Phaser.Scene {
         if(lvl2trigger) {
             lvl2trigger = false;
             this.scene.setVisible(false);
-            this.scene.launch('PlayScene2');
+            this.scene.launch('TestLongScene');
         }
     }
 }

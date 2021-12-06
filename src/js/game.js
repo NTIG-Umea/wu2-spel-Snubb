@@ -4,22 +4,23 @@ import PreloadScene from './preload-scene';
 import MenuScene from './menu-scene';
 import StartScene from './startmenu';
 import TestScene from './testing';
+import TestLongScene from './longtest';
 
 // spelets config
 const config = {
     type: Phaser.AUTO,
-    width: 896,
-    height: 448,
+    width: 900,
+    height: 600,
     pixelArt: true,
     transparent: true,
     physics: {
         default: 'arcade',
         arcade: {
             gravity: { y: 400 },
-            debug: false
+            debug: true
         }
     },
-    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene],
+    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene, TestLongScene],
     parent: 'game'
 };
 
