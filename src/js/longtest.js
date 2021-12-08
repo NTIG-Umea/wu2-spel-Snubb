@@ -1,3 +1,5 @@
+var newAngle = 0;
+
 class TestLongScene extends Phaser.Scene {
     constructor() {
         super('TestLongScene');
@@ -222,6 +224,8 @@ class TestLongScene extends Phaser.Scene {
         //#endregion
         this.white = this.add.image(0, 0, 'white').setOrigin(0, 0);
         this.white.alpha = 0;
+
+        this.newAngle = 0;
     }
 
     // play scenens update metod
@@ -314,7 +318,6 @@ class TestLongScene extends Phaser.Scene {
         let foeY = this.foe.body.y + this.foe.height/2;
         let playerX = this.player.body.x + this.player.width/2;
         let playerY = this.player.body.y + this.player.height/2;
-        let newAngle = 0;
         let numHomingball = this.homingBall.countActive(true);
         this.homingBall.children.iterate(function(child) {
             if(child.getData('time') == 0) {
@@ -326,6 +329,7 @@ class TestLongScene extends Phaser.Scene {
                 child.x = playerX + Math.sin(newAngle)*50;
                 child.y = playerY + Math.cos(newAngle)*50;
                 newAngle += (2*Math.PI)/numHomingball;
+                newAngle -= 0.005;
             }
 
         });
