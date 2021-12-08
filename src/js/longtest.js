@@ -219,6 +219,8 @@ class TestLongScene extends Phaser.Scene {
 
         this.cameras.main.startFollow(this.player);
 
+        console.log(this.cameras.main.scrollX);
+
 
         //#region Chocolate Spawner
         if(this.chocolateTimer <= 0) {
@@ -263,7 +265,7 @@ class TestLongScene extends Phaser.Scene {
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
             this.ballCooldown = 10;
             var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball').setScale(0.03);
-            var angle = Math.atan2((this.game.input.mousePointer.y - ball.y), (this.game.input.mousePointer.x - ball.x));
+            var angle = Math.atan2((this.game.input.mousePointer.y - ball.y), ((this.game.input.mousePointer.x + this.cameras.main.scrollX) - ball.x));
             ball.setGravityY(800);
             ball.setTint(0xffff00);
             ball.setDataEnabled();
@@ -400,8 +402,6 @@ class TestLongScene extends Phaser.Scene {
         }
         
         //#endregion
-
-        
 
     }
         

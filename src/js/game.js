@@ -9,7 +9,7 @@ import TestLongScene from './longtest';
 // spelets config
 const config = {
     type: Phaser.AUTO,
-    width: 900,
+    width: 2000,
     height: 600,
     pixelArt: true,
     transparent: true,
