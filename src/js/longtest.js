@@ -9,9 +9,11 @@ class TestLongScene extends Phaser.Scene {
 
 
 
-        // Key Listeners
+        //#region Key Listeners
         this.keyObjE = this.input.keyboard.addKey('E'); //For throwing snowballs
         this.keyObjQ = this.input.keyboard.addKey('Q'); // första ability
+        this.keyObjW = this.input.keyboard.addKey('W', true, false);
+        //#endregion
 
         //#region Variebellåda
         // variabel för att hålla koll på hur många gånger vi spikat oss själva
@@ -29,6 +31,8 @@ class TestLongScene extends Phaser.Scene {
 
         this.foeEnraged = false;
         //#endregion
+        
+        //#region Bilder och tilemap
         // ladda spelets bakgrundsbild, statisk
         // setOrigin behöver användas för att den ska ritas från top left
         this.add.image(0, 0, 'background').setOrigin(0, 0);
@@ -42,9 +46,6 @@ class TestLongScene extends Phaser.Scene {
         // för att göra create metoden mindre rörig
         this.initAnims();
 
-        // keyboard cursors
-        this.cursors = this.input.keyboard.createCursorKeys();
-
         // Ladda lagret Platforms från tilemappen
         // och skapa dessa
         // sätt collisionen
@@ -57,7 +58,10 @@ class TestLongScene extends Phaser.Scene {
         //     this.platforms
         // );
         // platforms.setCollision(1, true, true);
+        //#endregion
 
+        // keyboard cursors
+        this.cursors = this.input.keyboard.createCursorKeys();
 
         // skapa en spelare och ge den studs
         this.player = this.physics.add.sprite(50, 300, 'player');
@@ -112,9 +116,6 @@ class TestLongScene extends Phaser.Scene {
         });
         this.text.setScrollFactor(0);
         this.updateText();
-
-        // lägg till en keyboard input för W
-        this.keyObj = this.input.keyboard.addKey('W', true, false);
 
         // exempel för att lyssna på events
         this.events.on('pause', function () {
@@ -271,7 +272,7 @@ class TestLongScene extends Phaser.Scene {
             ball.setGravityY(800);
             ball.setTint(0xffff00);
             ball.setDataEnabled();
-            ball.setData({time: 240})
+            ball.setData({time: 240});
             ball.setBounce(1);
             ball.setCollideWorldBounds(true);
             ball.setVelocityY(Math.sin(angle)*1200);
@@ -317,7 +318,7 @@ class TestLongScene extends Phaser.Scene {
         
         //#region Pause
         // för pause
-        if (this.keyObj.isDown) {
+        if (this.keyObjW.isDown) {
             // pausa nuvarande scen
             this.scene.pause();
             // starta menyscenene
@@ -415,9 +416,6 @@ class TestLongScene extends Phaser.Scene {
         );
     }
 
-    
-
-    
     // när spelaren landar på en spik, då körs följande metod
     playerHit(player, spike) {
         this.spiked++;
