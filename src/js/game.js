@@ -5,12 +5,13 @@ import MenuScene from './menu-scene';
 import StartScene from './startmenu';
 import TestScene from './testing';
 import TestLongScene from './longtest';
+import TutorialScene from './tutorial';
 
 // spelets config
 const config = {
     type: Phaser.AUTO,
     width: 900,
-    height: 600,
+    height: 550,
     pixelArt: true,
     transparent: true,
     physics: {
@@ -20,7 +21,7 @@ const config = {
             debug: false
         }
     },
-    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene, TestLongScene],
+    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene, TestLongScene, TutorialScene],
     parent: 'game'
 };
 

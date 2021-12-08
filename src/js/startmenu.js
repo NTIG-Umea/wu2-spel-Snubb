@@ -40,7 +40,7 @@ class PreloadScene extends Phaser.Scene {
         if(lvl1trigger) {
             lvl1trigger = false;
             this.scene.setVisible(false);
-            this.scene.launch('TestScene')
+            this.scene.launch('TutorialScene')
         }
         if(lvl2trigger) {
             lvl2trigger = false;

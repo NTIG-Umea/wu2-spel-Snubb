@@ -14,6 +14,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('snowball', './images/snowball.png');
         this.load.image('rock', './images/rock.png');
         this.load.image('white', './images/white.png');
+        this.load.image('gate', '/images/fencegate.png');
         this.load.atlas(
             'player',
             '/images/jefrens_hero.png',
@@ -28,6 +29,7 @@ class PreloadScene extends Phaser.Scene {
         // här laddar vi in en tilemap med spelets "karta"
         this.load.tilemapTiledJSON('map', '/tilemaps/level1.json');
         this.load.tilemapTiledJSON('long_map', '/tilemaps/looong_looong_maaaaaaaan.json');
+        this.load.tilemapTiledJSON('tutorial_map', '/tilemaps/snow_tutorial_level.json');
     }
 
     create() {
