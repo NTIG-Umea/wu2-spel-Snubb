@@ -189,7 +189,7 @@ class TestLongScene extends Phaser.Scene {
         this.physics.add.overlap(this.chocolate, this.player, collectChoc, null, this);
 
         function collectChoc(player, chocolate) {
-            chocolate.disableBody(true, true);
+            chocolate.destroy();
             this.freezing = 1000;
         }
         //#endregion
@@ -270,14 +270,14 @@ class TestLongScene extends Phaser.Scene {
             // mousePointer följer inte med när skärmen scrollar, därför måste man
             // även addera kamerans scroll.
             var angle = Math.atan2((this.game.input.mousePointer.y - ball.y), ((this.game.input.mousePointer.x + this.cameras.main.scrollX) - ball.x));
-            ball.setGravityY(800);
+            ball.setGravityY(400);
             ball.setTint(0xffff00);
             ball.setDataEnabled();
             ball.setData({time: 240});
             ball.setBounce(1);
             ball.setCollideWorldBounds(true);
-            ball.setVelocityY(Math.sin(angle)*1200);
-            ball.setVelocityX(Math.cos(angle)*1200);
+            ball.setVelocityY(Math.sin(angle)*1000);
+            ball.setVelocityX(Math.cos(angle)*1000);
         }
         this.snowballs.children.iterate(function(child) {
             if(child != null) {
