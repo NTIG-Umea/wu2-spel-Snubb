@@ -17,7 +17,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 400 },
-            debug: true
+            debug: false
         }
     },
     scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene, TestLongScene],

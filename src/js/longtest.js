@@ -14,6 +14,7 @@ class TestLongScene extends Phaser.Scene {
         this.keyObjE = this.input.keyboard.addKey('E'); //For throwing snowballs
         this.keyObjQ = this.input.keyboard.addKey('Q'); // första ability
         this.keyObjW = this.input.keyboard.addKey('W', true, false);
+        this.keyObjZ = this.input.keyboard.addKey('Z');
         //#endregion
 
         //#region Variebellåda
@@ -27,6 +28,8 @@ class TestLongScene extends Phaser.Scene {
         this.shootCooldown = 0; // cooldown for boss shooting
 
         this.bigCooldown = 100;
+
+        this.circleCooldown = 200;
 
         this.foeHP = 1000;
 
@@ -138,7 +141,9 @@ class TestLongScene extends Phaser.Scene {
         function hurtFoe(foe, ball) {
             
             this.foeHP -= 10;
-            var vineBoom = this.sound.add('vineBoom').play();
+            var vineBoom = this.sound.add('vineBoom', {
+                volume: 5
+            }).play();
             //this.rock = this.physics.add.sprite(foe.x + foe.width/2, foe.y + foe.height/2, 'rock');
             var rock = this.theRock.create(foe.x, foe.y , 'rock');
             rock.setScale(0.5);
@@ -207,7 +212,13 @@ class TestLongScene extends Phaser.Scene {
             player.setTint(0xFF0000);
         }
         //#endregion
-        
+        //#region Homing balls
+        this.homingBall = this.physics.add.group({
+            time: 300
+        });
+        this.physics.add.overlap(this.homingBall, this.foe, hurtFoe, null, this);
+        //#endregion
+
         //#endregion
         this.white = this.add.image(0, 0, 'white').setOrigin(0, 0);
         this.white.alpha = 0;
@@ -279,6 +290,46 @@ class TestLongScene extends Phaser.Scene {
             ball.setVelocityY(Math.sin(angle)*1000);
             ball.setVelocityX(Math.cos(angle)*1000);
         }
+
+        if(this.circleCooldown > 0) {
+            this.circleCooldown--;
+        }
+
+        if(this.keyObjZ.isDown && this.circleCooldown == 0) {
+            this.circleCooldown = 10;
+            for(var i = 0; i < 2*Math.PI ; i += (2*Math.PI)/10) {
+                var balll = this.homingBall.create(this.player.x + Math.sin(i)*50, this.player.y + Math.cos(i)*50, 'snowball').setScale(0.03);
+                balll.setGravityY(0);
+                balll.body.setAllowGravity(false);
+                balll.setDataEnabled();
+                balll.setData({time: 100});
+                
+            }
+            this.homingBall.children.iterate(function(child) {
+                child.setData({time: 300});
+            })
+        }
+
+        let foeX = this.foe.body.x + this.foe.width/2;
+        let foeY = this.foe.body.y + this.foe.height/2;
+        let playerX = this.player.body.x + this.player.width/2;
+        let playerY = this.player.body.y + this.player.height/2;
+        let newAngle = 0;
+        let numHomingball = this.homingBall.countActive(true);
+        this.homingBall.children.iterate(function(child) {
+            if(child.getData('time') == 0) {
+                var angle = Math.atan2((foeY - child.y), (foeX - child.x));
+                child.setVelocityY(Math.sin(angle)*600);
+                child.setVelocityX(Math.cos(angle)*600);
+            } else {
+                child.data.values.time -= 1;
+                child.x = playerX + Math.sin(newAngle)*50;
+                child.y = playerY + Math.cos(newAngle)*50;
+                newAngle += (2*Math.PI)/numHomingball;
+            }
+
+        });
+
         this.snowballs.children.iterate(function(child) {
             if(child != null) {
                 if(child.getData('time') == 0) {
@@ -299,13 +350,13 @@ class TestLongScene extends Phaser.Scene {
             
             
         }
-        var foeX = this.foe.body.x + this.foe.width/2;
-        var foeY = this.foe.body.y + this.foe.height/2;
-        var playerX = this.player.body.x + this.player.width/2;
-        var playerY = this.player.body.y + this.player.height/2;
+        var foeX2 = this.foe.body.x + this.foe.width/2;
+        var foeY2 = this.foe.body.y + this.foe.height/2;
+        var playerX2 = this.player.body.x + this.player.width/2;
+        var playerY2 = this.player.body.y + this.player.height/2;
         this.bigBalls.children.iterate(function(child) {
             if(child.scale > 0.1) {   
-                var foeAngle = Math.atan2((foeY - child.y), (foeX - child.x));             
+                var foeAngle = Math.atan2((foeY2 - child.y), (foeX2 - child.x));             
                 child.setVelocityY(Math.sin(foeAngle)*500);
                 child.setVelocityX(Math.cos(foeAngle)*500);
 
