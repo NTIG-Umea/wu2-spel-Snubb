@@ -7,6 +7,7 @@ class TestLongScene extends Phaser.Scene {
         this.cameras.main.setSize(900, 600);
         this.cameras.main.setBounds(0,0, 3000, 600);
 
+        this.physics.world.setBounds( 0, 0, 2000, 600 );
 
 
         //#region Key Listeners
