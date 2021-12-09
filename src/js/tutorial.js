@@ -1,4 +1,24 @@
-var newAngle = 0;
+//#region En massa variabler och funktioner här utanför så att phaser blir glad
+//Utan detta klagar den på massa ställen att saker inte är defined
+var doors;
+var doorFlag;
+var enemies;
+var dis;
+var Faser;
+var snowCrashEmitter;
+var playerr;
+
+function destroyBall(ball) {
+    ball.data.values.emitter.on = false;
+    let w = -10;
+    if(ball.x - playerr.x > 0) {
+        w = 16;
+        console.log(w);
+    }
+    ball.destroy();
+    snowCrashEmitter.emitParticle(10, ball.x + w, ball.y);
+}
+//#endregion
 
 class TutorialScene extends Phaser.Scene {
     constructor() {
@@ -6,10 +26,20 @@ class TutorialScene extends Phaser.Scene {
     }
 
     create() {
+        //några onödiga variabler så jag kan använda dom i functions; phaser moment
+        dis = this;
+        Faser = Phaser;
+
         this.cameras.main.setSize(900, 600);
         this.cameras.main.setBounds(0,0, 3000, 600);
 
         this.physics.world.setBounds( 0, 0, 2500, 600 );
+
+        enemies = this.physics.add.group({
+            hp: 100
+        })
+
+        this.snowParticle = this.add.particles('snowParticle');
 
 
         //#region Key Listeners
@@ -37,12 +67,12 @@ class TutorialScene extends Phaser.Scene {
         // för att göra create metoden mindre rörig
         this.initAnims();
 
-        this.background = map.createLayer('Background', tileset);
+        this.background = map.createLayer('Background', tileset).setDepth(-100);
 
         this.gate = this.physics.add.group({
             allowGravity: false
         });
-        this.firstGate = this.gate.create(1310, 450, 'gate').setScale(0.13, 0.5).setImmovable();
+        
 
         this.gateButton = this.physics.add.sprite(1280, 350, ':)', {
             pressed: false
@@ -51,12 +81,38 @@ class TutorialScene extends Phaser.Scene {
         this.gateButton.setImmovable();
         this.gateButton.body.setAllowGravity(false);
 
+        doors = this.physics.add.group({
+            allowGravity: false,
+            immovable: true,
+            open: false
+        });
+        map.getObjectLayer('Doors').objects.forEach((door) => {
+            // iterera över spikarna, skapa spelobjekt
+            const doorSprite = doors
+                .create(door.x, door.y, 'gate')
+                .setOrigin(0)
+                .setScale(0.10, 0.40) //Detta behövs inte om jag har en sprite som är rätt storlek
+                .setDataEnabled();
+        });
+
         // Ladda lagret Platforms från tilemappen
         // och skapa dessa
         // sätt collisionen
         this.platforms = map.createLayer('Platforms', tileset);
         this.platforms.setCollisionByExclusion(-1, true);
 
+        doorFlag = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+        map.getObjectLayer('DoorCloseFlag').objects.forEach((flag) => {
+            // iterera över spikarna, skapa spelobjekt
+            const newFlag = doorFlag
+                .create(flag.x, flag.y, 'empty')
+                .setOrigin(0);
+            doorFlag.body
+                //.setSize(flag.width, flag.height);
+        });
         
         //#endregion
 
@@ -65,11 +121,14 @@ class TutorialScene extends Phaser.Scene {
 
         // skapa en spelare och ge den studs
         this.player = this.physics.add.sprite(50, 300, 'player');
+        this.player.setCircle(this.player.width/2);
         this.player.setBounce(0);
         this.player.setCollideWorldBounds(true);
+        playerr = this.player;
 
         // krocka med platforms lagret
         this.physics.add.collider(this.player, this.platforms);
+        this.physics.add.collider(this.player, doors);
 
         // exempel för att lyssna på events
         this.events.on('pause', function () {
@@ -81,35 +140,106 @@ class TutorialScene extends Phaser.Scene {
         //#region Physics groups
         //#region Snowballs
         this.snowballs = this.physics.add.group({
-            time: 240
+            time: 240,
+            emitter: null
         });
         this.physics.add.collider(this.snowballs, this.platforms);
+        this.physics.add.overlap(this.snowballs, enemies, hurtEnemy, null, this)
+        function hurtEnemy(ball, enemy) {
+            console.log("HIT");
+            destroyBall(ball);
+            enemy.setTint(0xFF0000);
+            this.time.addEvent({
+                delay: 60,
+                callback: ()=>{
+                    enemy.setTint(0xFFFFFF);
+                }
+            });
+            enemy.data.values.hp -= 10;
+            if(enemy.data.values.hp <= 0) {
+                enemy.destroy();
+            }
+            if(enemies.countActive(true) == 0) {
+                pressButton(this.gateButton);
+            }
+        }
         this.ballCooldown = 0;
 
         //#endregion
 
-        this.physics.add.collider(this.gate, this.player);
+        //#region Door shenanigans
+        this.physics.add.collider(doors, this.snowballs);
 
+        var fade = this.tweens;
         this.physics.add.overlap(this.gateButton, this.snowballs, pressButton, null, this);
         function pressButton(button, ball) {
             if(!button.data.values.pressed) {
                 button.data.values.pressed = true;
                 button.x += 20;
+                
+                doors.children.iterate(function(child){
+                    child.data.values.open = true;
+                    let tw2 = fade.add({
+                        targets: child,
+                        y: child.y - 150,
+                        duration: 500,
+                        ease: 'Linear'
+                    });
+                })
             }
         }
+        var tempButton = this.gateButton;
+        this.physics.add.overlap(doorFlag, this.player, closeDoors, spawnEnemies, null, this);
+        function closeDoors(player, doorFlag){
+            doorFlag.destroy();
+            doors.children.iterate(function(child){
+                if(child.data.values.open) {
+                    let tw = fade.add({
+                        targets: child,
+                        y: child.y + 150,
+                        duration: 100,
+                        ease: 'Linear'
+                    })
+                    child.data.values.open = false;
+                }
+            })
+            tempButton.data.values.pressed = false;
+        }
+        //#endregion
+
+        //#region enemies in door woo
+
+        function spawnEnemies() {
+            map.getObjectLayer('EnemySpawn').objects.forEach((enemy) => {
+                // iterera över spikarna, skapa spelobjekt
+                const newEnemy = enemies
+                    .create(enemy.x, enemy.y, 'foe')
+                    .setOrigin(0)
+                    .setDataEnabled()
+                    .setData({hp: 100});
+                
+                newEnemy.setCircle(newEnemy.width/2);
+                
+            });
+        }
+        this.physics.add.collider(enemies, this.platforms);
 
         //#endregion
+
+        //#endregion
+
+
+        snowCrashEmitter = this.snowParticle.createEmitter({
+            speed: {min: 10, max: 25},
+            accelerationY: 200,
+            on: false,
+            lifespan: { min: 500, max: 1000 },
+        })
     }
 
     // play scenens update metod
     update() {
 
-        if(this.gateButton.data.values.pressed) {
-            console.log("PRESSED")
-            if(this.firstGate != null) {
-                this.firstGate.destroy();
-            }
-        }
 
         this.cameras.main.startFollow(this.player);
            
@@ -118,30 +248,43 @@ class TutorialScene extends Phaser.Scene {
             this.ballCooldown--;
         }
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
-            this.ballCooldown = 10;
+            this.ballCooldown = 20;
             var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball').setScale(0.03);
             // mousePointer följer inte med när skärmen scrollar, därför måste man
             // även addera kamerans scroll.
             var angle = Math.atan2((this.game.input.mousePointer.y - ball.y), ((this.game.input.mousePointer.x + this.cameras.main.scrollX) - ball.x));
             ball.setGravityY(400);
-            ball.setTint(0xffff00);
             ball.setDataEnabled();
             ball.setData({time: 240});
-            ball.setBounce(1);
+            ball.setBounce(0);
             ball.setCollideWorldBounds(true);
             ball.setVelocityY(Math.sin(angle)*1000);
             ball.setVelocityX(Math.cos(angle)*1000);
+            ball.setCircle(ball.body.width/2);
+
+            var snowParticle = dis.add.particles('snowParticle');
+            ball.data.values.emitter = snowParticle.createEmitter({
+                speed: 50,
+                gravity: {x: 0, y: 400},
+                lifespan: 200,
+                x: ball.x + ball.width/2,
+                y: ball.y + ball.height/2,
+                quantity: 1
+            })
+            ball.data.values.emitter.startFollow(ball);
         }
 
         this.snowballs.children.iterate(function(child) {
             if(child != null) {
-                if(child.getData('time') == 0) {
-                    child.destroy();
+                if(child.getData('time') == 0 || child.body.velocity.x == 0 || child.body.velocity.y == 0) {
+                    destroyBall(child);
                 } else {
                     child.data.values.time -= 1;
                 }
             }
         });
+
+        
         //#endregion
 
         //#region Movement
@@ -185,14 +328,23 @@ class TutorialScene extends Phaser.Scene {
         }
     
     //#endregion
+    }
 
+    moveFirstGate() {
+        let tw = this.tweens.add({
+            targets: this.firstGate,
+            y: this.firstGate.y - 100,
+            duration: 500,
+            ease: 'Linear',
+            repeat: 1
+        });
     }
         
        
     // metoden updateText för att uppdatera overlaytexten i spelet
     updateText() {
         this.text.setText(
-            `Arrow keys to move. Space to jump. W to pause. Spiked: ${this.spiked}`
+            `Arrow keys to move. Space to jump. W to pause. doord: ${this.doord}`
         );
     }
 
