@@ -1,13 +1,11 @@
 //#region En massa variabler och funktioner här utanför så att phaser blir glad
 //Utan detta klagar den på massa ställen att saker inte är defined
-var doors;
-var doorFlag;
-var enemies;
 var dis;
 var Faser;
 var snowCrashEmitter;
 var playerr;
 var cleared = false;
+var bossFlag;
 
 function destroyBall(ball) {
     if(ball != null) {
@@ -30,9 +28,9 @@ function destroyBall(ball) {
 }
 //#endregion
 
-class TutorialScene extends Phaser.Scene {
+class CaveScene extends Phaser.Scene {
     constructor() {
-        super('TutorialScene');
+        super('CaveScene');
     }
 
     create() {
@@ -41,13 +39,10 @@ class TutorialScene extends Phaser.Scene {
         Faser = Phaser;
 
         this.cameras.main.setSize(900, 600);
-        this.cameras.main.setBounds(0,0, 3000, 600);
+        this.cameras.main.setBounds(0,0, 3000, 10000);
+        this.cameras.main.setZoom(0.9);
 
-        this.physics.world.setBounds( 0, 0, 2500, 600 );
-
-        enemies = this.physics.add.group({
-            hp: 100
-        })
+        this.physics.world.setBounds( 0, 0, 2500, 10000 );
 
         this.snowParticle = this.add.particles('snowParticle');
 
@@ -70,60 +65,39 @@ class TutorialScene extends Phaser.Scene {
         
         //#region Bilder och tilemap
         // skapa en tilemap från JSON filen vi preloadade
-        const map = this.make.tilemap({ key: 'tutorial_map', tileWidth: 32, tileHeight: 32 });
+        const map = this.make.tilemap({ key: 'cave_map', tileWidth: 32, tileHeight: 32 });
         // ladda in tilesetbilden till vår tilemap
-        const tileset = map.addTilesetImage('32_tileset', 'tiles');
+        const tileset = map.addTilesetImage('jefrens_tilesheet', 'tiles');
 
         // initiera animationer, detta är flyttat till en egen metod
         // för att göra create metoden mindre rörig
         this.initAnims();
 
         this.background = map.createLayer('Background', tileset).setDepth(-100);
-
-        this.gate = this.physics.add.group({
-            allowGravity: false
+        
+        
+        bossFlag = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+        map.getObjectLayer('BossFlag').objects.forEach((flag) => {
+            // iterera över spikarna, skapa spelobjekt
+            const newFlag = bossFlag
+                .create(flag.x, flag.y, 'empty')
+                .setOrigin(0);
+            newFlag.body
+                .setSize(flag.width, flag.height)
+                .setOffset(0, 20);
         });
         
-
-        this.gateButton = this.physics.add.sprite(1280, 350, ':)', {
-            pressed: false
-        });
-        this.gateButton.setDataEnabled();
-        this.gateButton.setImmovable();
-        this.gateButton.body.setAllowGravity(false);
-
-        doors = this.physics.add.group({
-            allowGravity: false,
-            immovable: true,
-            open: false
-        });
-        map.getObjectLayer('Doors').objects.forEach((door) => {
-            // iterera över spikarna, skapa spelobjekt
-            const doorSprite = doors
-                .create(door.x, door.y, 'gate')
-                .setOrigin(0)
-                .setScale(0.10, 0.40) //Detta behövs inte om jag har en sprite som är rätt storlek
-                .setDataEnabled();
-        });
-
+        
         // Ladda lagret Platforms från tilemappen
         // och skapa dessa
         // sätt collisionen
         this.platforms = map.createLayer('Platforms', tileset);
         this.platforms.setCollisionByExclusion(-1, true);
 
-        doorFlag = this.physics.add.group({
-            allowGravity: false,
-            immovable: true
-        });
-        map.getObjectLayer('DoorCloseFlag').objects.forEach((flag) => {
-            // iterera över spikarna, skapa spelobjekt
-            const newFlag = doorFlag
-                .create(flag.x, flag.y, 'empty')
-                .setOrigin(0);
-            doorFlag.body
-                //.setSize(flag.width, flag.height);
-        });
+        
         
         //#endregion
 
@@ -139,7 +113,6 @@ class TutorialScene extends Phaser.Scene {
 
         // krocka med platforms lagret
         this.physics.add.collider(this.player, this.platforms);
-        this.physics.add.collider(this.player, doors);
 
         // exempel för att lyssna på events
         this.events.on('pause', function () {
@@ -156,85 +129,58 @@ class TutorialScene extends Phaser.Scene {
             emitter: null
         });
         this.physics.add.collider(this.snowballs, this.platforms);
-        this.physics.add.overlap(this.snowballs, enemies, hurtEnemy, null, this)
-        function hurtEnemy(ball, enemy) {
-            console.log("HIT");
-            destroyBall(ball);
-            enemy.setTint(0xFF0000);
-            this.time.addEvent({
-                delay: 60,
-                callback: ()=>{
-                    enemy.setTint(0xFFFFFF);
-                }
-            });
-            enemy.data.values.hp -= 10;
-            if(enemy.data.values.hp <= 0) {
-                enemy.destroy();
-            }
-            if(enemies.countActive(true) == 0) {
-                pressButton(this.gateButton);
-            }
-        }
+        
         this.ballCooldown = 0;
 
         //#endregion
 
-        //#region Door shenanigans
-        this.physics.add.collider(doors, this.snowballs);
+        //#region boss room
 
-        var fade = this.tweens;
-        this.physics.add.overlap(this.gateButton, this.snowballs, pressButton, null, this);
-        function pressButton(button, ball) {
-            if(!button.data.values.pressed) {
-                button.data.values.pressed = true;
-                button.x += 20;
-                
-                doors.children.iterate(function(child){
-                    child.data.values.open = true;
-                    let tw2 = fade.add({
-                        targets: child,
-                        y: child.y - 150,
-                        duration: 500,
-                        ease: 'Linear'
-                    });
-                })
-            }
-        }
-        var tempButton = this.gateButton;
-        this.physics.add.overlap(doorFlag, this.player, closeDoors, spawnEnemies, null, this);
-        function closeDoors(player, doorFlag){
+        this.physics.add.overlap(bossFlag, this.player, initBoss, null, this);
+        var bossDoor = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+        this.physics.add.collider(bossDoor, this.player);
+        function initBoss(player, doorFlag){
             doorFlag.destroy();
-            doors.children.iterate(function(child){
-                if(child.data.values.open) {
-                    let tw = fade.add({
-                        targets: child,
-                        y: child.y + 150,
-                        duration: 100,
-                        ease: 'Linear'
-                    })
-                    child.data.values.open = false;
-                }
-            })
-            tempButton.data.values.pressed = false;
+            console.log("DEATH");
+            this.cameras.main.setBounds(850,900, 600, 600);
+            map.getObjectLayer('Doorpos').objects.forEach((flag) => {
+                // iterera över spikarna, skapa spelobjekt
+                const newDoor = bossDoor
+                    .create(flag.x, flag.y-20, 'gate')
+                    .setOrigin(0);
+                newDoor.body
+                    .setSize(flag.width, flag.height)
+                    .setOffset(0, 20);
+            });
+            var Boss = boss.create(1000, 1000, 'jens').setScale(0.25);
+            Boss.setDataEnabled();
+            Boss.setVelocityY(125);
+            Boss.setVelocityX(125);
+            Boss.setBounce(1);
         }
+
         //#endregion
 
-        //#region enemies in door woo
+        //#region Boss
 
-        function spawnEnemies() {
-            map.getObjectLayer('EnemySpawn').objects.forEach((enemy) => {
-                // iterera över spikarna, skapa spelobjekt
-                const newEnemy = enemies
-                    .create(enemy.x, enemy.y, 'foe')
-                    .setOrigin(0)
-                    .setDataEnabled()
-                    .setData({hp: 100});
-                
-                newEnemy.setCircle(newEnemy.width/2);
-                
-            });
+        let boss = this.physics.add.group({
+            hp: 3000,
+            enraged: false,
+            allowGravity: false
+        });
+
+        this.physics.add.collider(boss, this.platforms);
+        this.physics.add.collider(boss, bossDoor);
+        this.physics.add.overlap(boss, this.snowballs, hurtBoss, null, this);
+        function hurtBoss(boss, ball) {
+            boss.scale -= 0.01;
+            boss.body.velocity.x += 20;
+            boss.body.velocity.y += 20;
+            destroyBall(ball);
         }
-        this.physics.add.collider(enemies, this.platforms);
 
         //#endregion
 
@@ -266,7 +212,7 @@ class TutorialScene extends Phaser.Scene {
             var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball').setScale(0.03);
             // mousePointer följer inte med när skärmen scrollar, därför måste man
             // även addera kamerans scroll.
-            var angle = Math.atan2((this.game.input.mousePointer.y - ball.y), ((this.game.input.mousePointer.x + this.cameras.main.scrollX) - ball.x));
+            var angle = Math.atan2(((this.game.input.mousePointer.y + this.cameras.main.scrollY) - ball.y), ((this.game.input.mousePointer.x + this.cameras.main.scrollX) - ball.x));
             ball.setGravityY(400);
             ball.setDataEnabled();
             ball.setData({time: 240});
@@ -305,12 +251,12 @@ class TutorialScene extends Phaser.Scene {
         // följande kod är från det tutorial ni gjort tidigare
         // Control the player with left or right keys
         if (this.cursors.left.isDown || this.keyObjA.isDown) {
-            this.player.setVelocityX(-200);
+            this.player.setVelocityX(-400);
             if (this.player.body.onFloor()) {
                 this.player.play('walk', true);
             }
         } else if (this.cursors.right.isDown || this.keyObjD.isDown) {
-            this.player.setVelocityX(200);
+            this.player.setVelocityX(400);
             if (this.player.body.onFloor()) {
                 this.player.play('walk', true);
             }
@@ -330,7 +276,7 @@ class TutorialScene extends Phaser.Scene {
             (this.cursors.space.isDown || this.cursors.up.isDown || this.keyObjW.isDown) &&
             this.player.body.onFloor()
         ) {
-            this.player.setVelocityY(-350);
+            this.player.setVelocityY(-450);
             this.player.play('jump', true);
         }
 
@@ -343,14 +289,6 @@ class TutorialScene extends Phaser.Scene {
     
     //#endregion
 
-        enemies.children.iterate(function(child){
-            if(child.x - playerr.x > 0) {
-                child.body.velocity.x = -50
-            } else {
-                child.body.velocity.x = 50;
-            }
-        });
-
         //#region pause
 
         if (this.keyObjESC.isDown) {
@@ -362,31 +300,7 @@ class TutorialScene extends Phaser.Scene {
 
         //#endregion
 
-        if(this.player.x > 2300 && !cleared) {
-            cleared = true;
-            /*this.text = this.add.text(playerr.x - 400, (this.game.config.height / 2) - 64, 'Congratulations \n you can play a bideo game', {
-                fontFamily: '"Mochiy Pop P One"',
-                fontSize: '32px',
-                fill: '#ff0000',
-                //align: 'center',
-            });*/
-            this.scene.pause();
-            this.scene.setVisible(false);
-            this.scene.launch('CaveScene');
-            
-        }
-    }
-
     
-
-    moveFirstGate() {
-        let tw = this.tweens.add({
-            targets: this.firstGate,
-            y: this.firstGate.y - 100,
-            duration: 500,
-            ease: 'Linear',
-            repeat: 1
-        });
     }
         
        
@@ -424,4 +338,4 @@ class TutorialScene extends Phaser.Scene {
     }
 }
 
-export default TutorialScene;
+export default CaveScene;

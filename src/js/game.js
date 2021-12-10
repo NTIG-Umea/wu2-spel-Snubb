@@ -6,6 +6,7 @@ import StartScene from './startmenu';
 import TestScene from './testing';
 import TestLongScene from './longtest';
 import TutorialScene from './tutorial';
+import CaveScene from './level2';
 
 // spelets config
 const config = {
@@ -18,10 +19,10 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 400 },
-            debug: false
+            debug: true
         }
     },
-    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene, TestLongScene, TutorialScene],
+    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene, TestLongScene, TutorialScene, CaveScene],
     parent: 'game'
 };
 

@@ -1,9 +1,11 @@
 import TestScene from "./testing";
 import TestLongScene from "./longtest";
+import CaveScene from "./level2";
 
 var testTrigger = false;
 var lvl1trigger = false;
 var lvl2trigger = false;
+var lvl3trigger = false;
 
 class PreloadScene extends Phaser.Scene {
     constructor() {
@@ -25,12 +27,16 @@ class PreloadScene extends Phaser.Scene {
 
         var lvl1 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 64, 'spike').setInteractive();
         var lvl2 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 128, 'player').setInteractive();
+        var lvl3 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 192, 'spike').setInteractive();
 
         lvl1.on('pointerdown', function(pointer){
             lvl1trigger = true;
         });
         lvl2.on('pointerdown', function(pointer){
             lvl2trigger = true;
+        });
+        lvl3.on('pointerdown', function(pointer){
+            lvl3trigger = true;
         });
     }
 
@@ -40,12 +46,21 @@ class PreloadScene extends Phaser.Scene {
         if(lvl1trigger) {
             lvl1trigger = false;
             this.scene.setVisible(false);
+            this.scene.pause();
             this.scene.launch('TutorialScene')
         }
         if(lvl2trigger) {
             lvl2trigger = false;
+            this.scene.pause();
             this.scene.setVisible(false);
             this.scene.launch('TestLongScene');
+        }
+
+        if(lvl3trigger) {
+            lvl2trigger = false;
+            this.scene.pause();
+            this.scene.setVisible(false);
+            this.scene.launch('CaveScene');
         }
     }
 }

@@ -6,7 +6,7 @@ class PreloadScene extends Phaser.Scene {
     create() {
         // Det går att göra så att input lyssnar på spelet
         // nu är det på scenen, därför behöver vi skapa input igen
-        this.keyObj = this.input.keyboard.addKey('W', true, false);
+        this.keyObj = this.input.keyboard.addKey('ESC', true, false);
 
         // spelets config om vi behöver något från den, som width height
         // console.log(this.game.config)
@@ -21,13 +21,15 @@ class PreloadScene extends Phaser.Scene {
             fixedWidth: this.game.config.width,
             fixedHeight: this.game.config.height,
         });
+
+        this.text.setDepth(100);
     }
 
     // scenens uppdate metod, lyssnar på keyDown
     update() {
         if (this.keyObj.isDown) {
             // resumera spelscenen
-            this.scene.resume('PlayScene');
+            this.scene.resume('TutorialScene');
             // göm denna scen
             this.scene.setVisible(false);
         }

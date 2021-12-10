@@ -17,6 +17,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('gate', '/images/fencegate.png');
         this.load.image('empty', '/images/empty.png');
         this.load.image('snowParticle', '/images/snowflake.png');
+        this.load.image('jens', '/images/jens.png');
         this.load.atlas(
             'player',
             '/images/jefrens_hero.png',
@@ -32,6 +33,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.tilemapTiledJSON('map', '/tilemaps/level1.json');
         this.load.tilemapTiledJSON('long_map', '/tilemaps/looong_looong_maaaaaaaan.json');
         this.load.tilemapTiledJSON('tutorial_map', '/tilemaps/snow_tutorial_level.json');
+        this.load.tilemapTiledJSON('cave_map', '/tilemaps/level2.json');
     }
 
     create() {
