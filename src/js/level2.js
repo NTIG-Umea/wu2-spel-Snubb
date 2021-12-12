@@ -156,9 +156,12 @@ class CaveScene extends Phaser.Scene {
             });
             var Boss = this.boss.create(1000, 1000, 'jens').setScale(0.25);
             Boss.setDataEnabled();
-            Boss.setData({hp: 3000});
-            Boss.setData({shotCooldown: 0});
-            Boss.setData({currentMove: "none"});
+            Boss.setData({
+                hp: 3000,
+                shotCooldown: 0,
+                currentMove: "none",
+                isTracking: false
+            });
         }
 
         //#endregion
@@ -170,7 +173,8 @@ class CaveScene extends Phaser.Scene {
             enraged: false,
             allowGravity: false,
             shotCooldown: 1000,
-            currentMove: "none"
+            currentMove: "none",
+            isTracking: false
         });
 
         this.physics.add.collider(this.boss, this.platforms);
@@ -205,7 +209,8 @@ class CaveScene extends Phaser.Scene {
             isTracking: false,
             allowGravity: false,
             line: null,
-            hasBeenShot: false
+            hasBeenShot: false,
+            parent: null
         });
 
         //#endregion
@@ -385,6 +390,7 @@ class CaveScene extends Phaser.Scene {
                 callback: ()=>{
                     dis.time.addEvent({
                         callback: ()=>{
+                            boss.data.values.isTracking = true;
                             let shot = lazor.create(boss.x, boss.y, 'snowball');
                             shot.setScale(0.03);
                             shot.setTint(0x00FF00);
@@ -392,7 +398,8 @@ class CaveScene extends Phaser.Scene {
                             shot.setData({
                                 line: dis.add.line(0, 0, shot.x, shot.y, playerr.x, playerr.y, 0x0000FF).setOrigin(0).setLineWidth(2),
                                 isTracking: true,
-                                hasBeenShot: false
+                                hasBeenShot: false,
+                                parent: boss
                             });
                         },
                         delay: 100,
@@ -420,27 +427,27 @@ class CaveScene extends Phaser.Scene {
         //Känns onödigt att ha två separata identiska funktioner men Phasers hela physics system brakade 
         //när dem var under samma och jag vette fan varför
         this.laserBall.children.iterate(function(child){
-            if(child.data.values.isTracking) {
+            if(child.data.values.parent.data.values.isTracking) {
                 var angle = Math.atan2((playerr.y - child.y), (playerr.x - child.x));
                 child.data.values.line.setTo(child.x, child.y, child.x + Math.cos(angle)*1000, child.y + Math.sin(angle)*1000);
                 dis.time.addEvent({
                     delay: 3000,
                     callback: ()=>{
-                        child.data.values.isTracking = false;
+                        child.data.values.parent.data.values.isTracking = false;
                     }
                 })
             }
         })
         this.laserBall.children.iterate(function(child){
             let angle = Math.atan2((playerr.y - child.y), (playerr.x - child.x));
-            if(!child.data.values.isTracking && !child.data.values.hasBeenShot) {
+            if(!child.data.values.parent.data.values.isTracking && !child.data.values.hasBeenShot) {
                 child.data.values.hasBeenShot = true;
                 dis.time.addEvent({
                     delay: 1500,
                     callback: ()=>{
-                        child.data.values.line.destroy();
+                        child.data.values.line.setVisible(false);
                         child.setVelocityY(Math.sin(angle)*1500);
-                        child.setVelocityX(Math.cos(angle)*1500)
+                        child.setVelocityX(Math.cos(angle)*1500);
                     }
                 });
             }
