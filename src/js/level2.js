@@ -1,7 +1,4 @@
 //#region En massa variabler och funktioner här utanför så att phaser blir glad
-
-import { lineBreak } from "acorn";
-
 //Utan detta klagar den på massa ställen att saker inte är defined
 var dis;
 var Faser;
@@ -109,8 +106,12 @@ class CaveScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // skapa en spelare och ge den studs
-        this.player = this.physics.add.sprite(1000, 1000, 'player');
+        this.player = this.physics.add.sprite(1000, 1000, 'player',{
+            hp: 100
+        });
         this.player.setCircle(this.player.width/2);
+        this.player.setDataEnabled();
+        this.player.setData({hp: 100});
         this.player.setBounce(0);
         this.player.setCollideWorldBounds(true);
         playerr = this.player;
@@ -148,8 +149,14 @@ class CaveScene extends Phaser.Scene {
         this.physics.add.collider(bossDoor, this.player);
         function initBoss(player, doorFlag){
             doorFlag.destroy();
-            this.cameras.main.setBounds(850,900, 600, 600);
             this.cameras.main.stopFollow();
+            this.cameras.main.pan(1350, 1235, 600);
+            this.time.addEvent({
+                delay: 600,
+                callback: ()=>{
+                    this.cameras.main.setBounds(850,900, 600, 600)
+                }
+            })
             map.getObjectLayer('Doorpos').objects.forEach((flag) => {
                 // iterera över spikarna, skapa spelobjekt
                 const newDoor = bossDoor
@@ -175,6 +182,13 @@ class CaveScene extends Phaser.Scene {
                     quantity: 1
                 }).startFollow(Boss)
             });
+            dis.bossParticleEmitter = this.snowParticle.createEmitter({
+                speed: {min: 10, max: 25},
+                accelerationY: 200,
+                on: false,
+                lifespan: { min: 500, max: 1000 },
+            })
+            dis.bossParticleEmitter.startFollow(Boss);
         }
 
         //#endregion
@@ -210,7 +224,8 @@ class CaveScene extends Phaser.Scene {
         this.enemySnowBall = this.physics.add.group();
         this.physics.add.overlap(this.enemySnowBall, this.player, hurt, null, this);
         function hurt(player, ball) {
-            ball.destroy();
+            ball.setVisible(false);
+            ball.disableBody();
             player.setTint(0xFF0000);
             this.time.addEvent({
                 delay: 60,
@@ -227,6 +242,7 @@ class CaveScene extends Phaser.Scene {
             hasBeenShot: false,
             parent: null
         });
+        this.physics.add.overlap(this.laserBall, this.player, hurt, null, this);
 
         //#endregion
 
@@ -239,7 +255,6 @@ class CaveScene extends Phaser.Scene {
             on: false,
             lifespan: { min: 500, max: 1000 },
         })
-
 
         this.cameras.main.startFollow(this.player);
         
@@ -288,6 +303,7 @@ class CaveScene extends Phaser.Scene {
                 }
             }
         });
+
 
         
         //#endregion
@@ -358,20 +374,20 @@ class CaveScene extends Phaser.Scene {
                             child.data.values.shotCooldown--;
                         }
 
-                        if(child.body.x > playerr.body.x + 60 && child.body.velocity.x > - 150) {
-                            child.setVelocityX(child.body.velocity.x - 4)
+                        if(child.body.x > playerr.body.x + 60 && child.body.velocity.x > - 200) {
+                            child.setVelocityX(child.body.velocity.x - 12)
                         } else if(child.body.x > playerr.body.x && child.body.velocity.x > - 50){
-                            child.setVelocityX(child.body.velocity.x - 2)
+                            child.setVelocityX(child.body.velocity.x - 6)
                         } else {
-                            child.setVelocityX(child.body.velocity.x + 4)
+                            child.setVelocityX(child.body.velocity.x + 12)
                         }
 
-                        if(child.body.x < playerr.body.x - 60 && child.body.velocity.x < 150) {
-                            child.setVelocityX(child.body.velocity.x + 4)
+                        if(child.body.x < playerr.body.x - 60 && child.body.velocity.x < 200) {
+                            child.setVelocityX(child.body.velocity.x + 12)
                         } else if(child.body.x < playerr.body.x && child.body.velocity.x < 50){
-                            child.setVelocityX(child.body.velocity.x + 2)
+                            child.setVelocityX(child.body.velocity.x + 6)
                         } else {
-                            child.setVelocityX(child.body.velocity.x - 4)
+                            child.setVelocityX(child.body.velocity.x - 12)
                         }
                     
                         if(child.body.x - playerr.body.x < 60 && child.data.values.shotCooldown == 0 && child.data.values.currentMove == "none") {
@@ -434,6 +450,13 @@ class CaveScene extends Phaser.Scene {
                 ease: 'Power2',
                 delay: 2000
             });
+            dis.tweens.add({
+                targets: boss,
+                y: 1000,
+                duration: 2000,
+                ease: 'linear',
+                delay: 4000
+            });
             dis.time.addEvent({
                 delay: 7000,
                 callback: ()=>{
@@ -451,7 +474,7 @@ class CaveScene extends Phaser.Scene {
                     var angle = Math.atan2((playerr.y - child.y), (playerr.x - child.x));
                     child.data.values.line.setTo(child.x, child.y, child.x + Math.cos(angle)*1000, child.y + Math.sin(angle)*1000);
                     dis.time.addEvent({
-                        delay: 3000,
+                        delay: 2000,
                         callback: ()=>{
                             if(child.data.values.parent.data != undefined) {
                                 child.data.values.parent.data.values.isTracking = false;
@@ -475,7 +498,6 @@ class CaveScene extends Phaser.Scene {
                 }
             })
         }
-    
         //#endregion
     }
         
@@ -489,7 +511,7 @@ class CaveScene extends Phaser.Scene {
 
     finishBoss(boss) {
         boss.destroy();
-        dis.cameras.main.pan(playerr.x, playerr.y , 1000);
+        dis.cameras.main.pan(playerr.x, playerr.y , 3000);
         dis.cameras.main.setBounds(0,0, 3000, 10000);
         dis.player.disableBody();
         dis.player.setVelocityX(0);
@@ -498,7 +520,7 @@ class CaveScene extends Phaser.Scene {
             child.destroy();
         });
         dis.time.addEvent({
-            delay: 1000,
+            delay: 3000,
             callback: ()=>{
                 dis.cameras.main.startFollow(this.player);
                 dis.player.enableBody();
