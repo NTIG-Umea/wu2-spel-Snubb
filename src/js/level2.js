@@ -1,4 +1,7 @@
 //#region En massa variabler och funktioner här utanför så att phaser blir glad
+
+import { lineBreak } from "acorn";
+
 //Utan detta klagar den på massa ställen att saker inte är defined
 var dis;
 var Faser;
@@ -6,6 +9,7 @@ var snowCrashEmitter;
 var playerr;
 var cleared = false;
 var bossFlag;
+var bossDoor;
 
 function destroyBall(ball) {
     if(ball != null) {
@@ -105,7 +109,7 @@ class CaveScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // skapa en spelare och ge den studs
-        this.player = this.physics.add.sprite(50, 300, 'player');
+        this.player = this.physics.add.sprite(1000, 1000, 'player');
         this.player.setCircle(this.player.width/2);
         this.player.setBounce(0);
         this.player.setCollideWorldBounds(true);
@@ -137,7 +141,7 @@ class CaveScene extends Phaser.Scene {
         //#region boss room
 
         this.physics.add.overlap(bossFlag, this.player, initBoss, null, this);
-        var bossDoor = this.physics.add.group({
+        bossDoor = this.physics.add.group({
             allowGravity: false,
             immovable: true
         });
@@ -145,19 +149,20 @@ class CaveScene extends Phaser.Scene {
         function initBoss(player, doorFlag){
             doorFlag.destroy();
             this.cameras.main.setBounds(850,900, 600, 600);
+            this.cameras.main.stopFollow();
             map.getObjectLayer('Doorpos').objects.forEach((flag) => {
                 // iterera över spikarna, skapa spelobjekt
                 const newDoor = bossDoor
-                    .create(flag.x, flag.y-20, 'gate')
+                    .create(flag.x, flag.y, 'white_platform')
                     .setOrigin(0);
                 newDoor.body
                     .setSize(flag.width, flag.height)
-                    .setOffset(0, 20);
+                    .setOffset(0, 0);
             });
             var Boss = this.boss.create(1000, 1000, 'jens').setScale(0.25);
             Boss.setDataEnabled();
             Boss.setData({
-                hp: 3000,
+                hp: 1000,
                 shotCooldown: 0,
                 currentMove: "none",
                 isTracking: false
@@ -182,6 +187,7 @@ class CaveScene extends Phaser.Scene {
         this.physics.add.overlap(this.boss, this.snowballs, hurtBoss, null, this);
         function hurtBoss(boss, ball) {
             boss.data.values.hp -= 10;
+            console.log(boss.data.values.hp);
             destroyBall(ball);
             boss.setTint(0xFF0000);
             this.time.addEvent({
@@ -225,21 +231,20 @@ class CaveScene extends Phaser.Scene {
             lifespan: { min: 500, max: 1000 },
         })
 
+
+        this.cameras.main.startFollow(this.player);
         
     }
 
     // play scenens update metod
     update() {
-
-
-        this.cameras.main.startFollow(this.player);
            
         //#region Throw snowball
         if(this.ballCooldown > 0) {
             this.ballCooldown--;
         }
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
-            this.ballCooldown = 20;
+            this.ballCooldown = 2;
             var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball').setScale(0.03);
             // mousePointer följer inte med när skärmen scrollar, därför måste man
             // även addera kamerans scroll.
@@ -337,41 +342,46 @@ class CaveScene extends Phaser.Scene {
 
         if(this.boss.countActive(true) > 0) {
             this.boss.children.iterate(function(child){
-                if(child.data.values.shotCooldown > 0) {
-                    child.data.values.shotCooldown--;
+                if(child.data.values.hp <= 0 && child.data.values.currentMove == "none") {
+                    dis.finishBoss(child);
+                } else if(child != null) {
+                        if(child.data.values.shotCooldown > 0) {
+                            child.data.values.shotCooldown--;
+                        }
+
+                        if(child.body.x > playerr.body.x + 60 && child.body.velocity.x > - 150) {
+                            child.setVelocityX(child.body.velocity.x - 4)
+                        } else if(child.body.x > playerr.body.x && child.body.velocity.x > - 50){
+                            child.setVelocityX(child.body.velocity.x - 2)
+                        } else {
+                            child.setVelocityX(child.body.velocity.x + 4)
+                        }
+
+                        if(child.body.x < playerr.body.x - 60 && child.body.velocity.x < 150) {
+                            child.setVelocityX(child.body.velocity.x + 4)
+                        } else if(child.body.x < playerr.body.x && child.body.velocity.x < 50){
+                            child.setVelocityX(child.body.velocity.x + 2)
+                        } else {
+                            child.setVelocityX(child.body.velocity.x - 4)
+                        }
+                    
+                        if(child.body.x - playerr.body.x < 60 && child.data.values.shotCooldown == 0 && child.data.values.currentMove == "none") {
+                            child.data.values.shotCooldown = 100;
+                            var enemyBullet = bullet.create(child.body.x + 50, child.body.y + 50, 'snowball').setScale(0.05);
+                            enemyBullet.setTint(0xFF0000);
+                            enemyBullet.setVelocityY(150);
+
+                        }
+                    
+                    
+                        console.log(child.data.values.currentMove);
+                        let rand = Faser.Math.FloatBetween(0, 1000);
+                        if(rand < 10 && child.data.values.currentMove == "none") {
+                            child.data.values.currentMove = "bulletSweep"
+                            bulletSweep(child);
+                        }
                 }
                 
-                if(child.body.x > playerr.body.x + 60 && child.body.velocity.x > - 150) {
-                    child.setVelocityX(child.body.velocity.x - 4)
-                } else if(child.body.x > playerr.body.x && child.body.velocity.x > - 50){
-                    child.setVelocityX(child.body.velocity.x - 2)
-                } else {
-                    child.setVelocityX(child.body.velocity.x + 4)
-                }
-                
-                if(child.body.x < playerr.body.x - 60 && child.body.velocity.x < 150) {
-                    child.setVelocityX(child.body.velocity.x + 4)
-                } else if(child.body.x < playerr.body.x && child.body.velocity.x < 50){
-                    child.setVelocityX(child.body.velocity.x + 2)
-                } else {
-                    child.setVelocityX(child.body.velocity.x - 4)
-                }
-        
-                if(child.body.x - playerr.body.x < 60 && child.data.values.shotCooldown == 0 && child.data.values.currentMove == "none") {
-                    child.data.values.shotCooldown = 100;
-                    var enemyBullet = bullet.create(child.body.x + 50, child.body.y + 50, 'snowball').setScale(0.05);
-                    enemyBullet.setTint(0xFF0000);
-                    enemyBullet.setVelocityY(150);
-                        
-                }
-
-
-                console.log(child.data.values.currentMove);
-                let rand = Faser.Math.FloatBetween(0, 1000);
-                if(rand < 10 && child.data.values.currentMove == "none") {
-                    child.data.values.currentMove = "bulletSweep"
-                    bulletSweep(child);
-                }
             })
         
         }
@@ -396,7 +406,7 @@ class CaveScene extends Phaser.Scene {
                             shot.setTint(0x00FF00);
                             shot.setDataEnabled();
                             shot.setData({
-                                line: dis.add.line(0, 0, shot.x, shot.y, playerr.x, playerr.y, 0x0000FF).setOrigin(0).setLineWidth(2),
+                                line: dis.add.line(0, 0, shot.x, shot.y, playerr.x, playerr.y, 0x0000FF).setOrigin(0).setLineWidth(1),
                                 isTracking: true,
                                 hasBeenShot: false,
                                 parent: boss
@@ -426,32 +436,36 @@ class CaveScene extends Phaser.Scene {
 
         //Känns onödigt att ha två separata identiska funktioner men Phasers hela physics system brakade 
         //när dem var under samma och jag vette fan varför
-        this.laserBall.children.iterate(function(child){
-            if(child.data.values.parent.data.values.isTracking) {
-                var angle = Math.atan2((playerr.y - child.y), (playerr.x - child.x));
-                child.data.values.line.setTo(child.x, child.y, child.x + Math.cos(angle)*1000, child.y + Math.sin(angle)*1000);
-                dis.time.addEvent({
-                    delay: 3000,
-                    callback: ()=>{
-                        child.data.values.parent.data.values.isTracking = false;
-                    }
-                })
-            }
-        })
-        this.laserBall.children.iterate(function(child){
-            let angle = Math.atan2((playerr.y - child.y), (playerr.x - child.x));
-            if(!child.data.values.parent.data.values.isTracking && !child.data.values.hasBeenShot) {
-                child.data.values.hasBeenShot = true;
-                dis.time.addEvent({
-                    delay: 1500,
-                    callback: ()=>{
-                        child.data.values.line.setVisible(false);
-                        child.setVelocityY(Math.sin(angle)*1500);
-                        child.setVelocityX(Math.cos(angle)*1500);
-                    }
-                });
-            }
-        })
+        if(this.boss.countActive(true) > 0) {
+            this.laserBall.children.iterate(function(child){
+                if(child.data.values.parent.data.values.isTracking) {
+                    var angle = Math.atan2((playerr.y - child.y), (playerr.x - child.x));
+                    child.data.values.line.setTo(child.x, child.y, child.x + Math.cos(angle)*1000, child.y + Math.sin(angle)*1000);
+                    dis.time.addEvent({
+                        delay: 3000,
+                        callback: ()=>{
+                            if(child.data.values.parent.data != undefined) {
+                                child.data.values.parent.data.values.isTracking = false;
+                            }
+                        }
+                    })
+                }
+            })
+            this.laserBall.children.iterate(function(child){
+                let angle = Math.atan2((playerr.y - child.y), (playerr.x - child.x));
+                if(!child.data.values.parent.data.values.isTracking && !child.data.values.hasBeenShot) {
+                    child.data.values.hasBeenShot = true;
+                    dis.time.addEvent({
+                        delay: 500,
+                        callback: ()=>{
+                            child.data.values.line.setVisible(false);
+                            child.setVelocityY(Math.sin(angle)*1500);
+                            child.setVelocityX(Math.cos(angle)*1500);
+                        }
+                    });
+                }
+            })
+        }
     
         //#endregion
     }
@@ -462,6 +476,25 @@ class CaveScene extends Phaser.Scene {
         this.text.setText(
             `Arrow keys to move. Space to jump. W to pause. doord: ${this.doord}`
         );
+    }
+
+    finishBoss(boss) {
+        boss.destroy();
+        dis.cameras.main.pan(playerr.x, playerr.y , 1000);
+        dis.cameras.main.setBounds(0,0, 3000, 10000);
+        dis.player.disableBody();
+        dis.player.setVelocityX(0);
+        dis.player.setVelocityY(0);
+        bossDoor.children.iterate(function(child){
+            child.destroy();
+        });
+        dis.time.addEvent({
+            delay: 1000,
+            callback: ()=>{
+                dis.cameras.main.startFollow(this.player);
+                dis.player.enableBody();
+            }
+        })
     }
 
     // när vi skapar scenen så körs initAnims för att ladda spelarens animationer
