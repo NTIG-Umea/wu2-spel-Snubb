@@ -165,7 +165,15 @@ class CaveScene extends Phaser.Scene {
                 hp: 1000,
                 shotCooldown: 0,
                 currentMove: "none",
-                isTracking: false
+                isTracking: false,
+                emitter: this.snowParticle.createEmitter({
+                    speed: 50,
+                    gravity: {x: 0, y: 400},
+                    lifespan: 200,
+                    x: Boss.x + 20,
+                    y: Boss.y + 20,
+                    quantity: 1
+                }).startFollow(Boss)
             });
         }
 
@@ -179,7 +187,8 @@ class CaveScene extends Phaser.Scene {
             allowGravity: false,
             shotCooldown: 1000,
             currentMove: "none",
-            isTracking: false
+            isTracking: false,
+            emitter: null
         });
 
         this.physics.add.collider(this.boss, this.platforms);
