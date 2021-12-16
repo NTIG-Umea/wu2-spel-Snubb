@@ -310,7 +310,7 @@ class TestLongScene extends Phaser.Scene {
                 
             }
             this.homingBall.children.iterate(function(child) {
-                child.setData({time: 300});
+                child.setData({time: 100});
             })
         }
 

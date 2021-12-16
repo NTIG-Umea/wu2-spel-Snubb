@@ -305,12 +305,12 @@ class TutorialScene extends Phaser.Scene {
         // följande kod är från det tutorial ni gjort tidigare
         // Control the player with left or right keys
         if (this.cursors.left.isDown || this.keyObjA.isDown) {
-            this.player.setVelocityX(-200);
+            this.player.setVelocityX(-400);
             if (this.player.body.onFloor()) {
                 this.player.play('walk', true);
             }
         } else if (this.cursors.right.isDown || this.keyObjD.isDown) {
-            this.player.setVelocityX(200);
+            this.player.setVelocityX(400);
             if (this.player.body.onFloor()) {
                 this.player.play('walk', true);
             }
@@ -330,7 +330,7 @@ class TutorialScene extends Phaser.Scene {
             (this.cursors.space.isDown || this.cursors.up.isDown || this.keyObjW.isDown) &&
             this.player.body.onFloor()
         ) {
-            this.player.setVelocityY(-350);
+            this.player.setVelocityY(-450);
             this.player.play('jump', true);
         }
 

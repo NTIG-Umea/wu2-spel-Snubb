@@ -3,12 +3,14 @@
 var dis;
 var Faser;
 var snowCrashEmitter;
+var laserEmitter;
 var playerr;
 var cleared = false;
 var bossFlag;
 var bossDoor;
 var map;
 var tileset;
+var lasorArray = [];
 
 function destroyBall(ball) {
     if(ball != null) {
@@ -181,7 +183,7 @@ class CaveScene extends Phaser.Scene {
                 shotCooldown: 0,
                 currentMove: "none",
                 isTracking: false,
-                isEngraged: false
+                isEngraged: false,
             });
             Boss.setDepth(-50);
         }
@@ -216,7 +218,9 @@ class CaveScene extends Phaser.Scene {
             });
         }
 
-        this.enemySnowBall = this.physics.add.group();
+        this.enemySnowBall = this.physics.add.group({
+            time: 1000
+        });
         this.physics.add.overlap(this.enemySnowBall, this.player, hurt, null, this);
         function hurt(player, ball) {
             player.data.values.hp -= 5;
@@ -225,6 +229,7 @@ class CaveScene extends Phaser.Scene {
             }
             ball.setVisible(false);
             ball.disableBody();
+            //ball.destroy();
             player.setTint(0xFF0000);
             this.time.addEvent({
                 delay: 60,
@@ -240,13 +245,22 @@ class CaveScene extends Phaser.Scene {
             allowGravity: false,
             line: null,
             hasBeenShot: false,
-            parent: null
+            parent: null,
+            time: 500
         });
         this.physics.add.overlap(this.laserBall, this.player, hurt, null, this);
 
         //#endregion
 
         //#endregion
+        laserEmitter = this.snowParticle.createEmitter({
+            speed: {min: 25, max: 50},
+            accelerationY: 100,
+            angle: {min: 0, max: 180},
+            on: false,
+            lifespan: { min: 300, max: 600 },
+            tint: 0x75b1ff
+        });
 
 
         snowCrashEmitter = this.snowParticle.createEmitter({
@@ -299,6 +313,13 @@ class CaveScene extends Phaser.Scene {
             });
             dis.updateText();
         }
+
+        map.getObjectLayer('Lasor').objects.forEach((flag) => {
+            // iterera över spikarna, skapa spelobjekt
+            let newLasor = dis.add.line(0, 0, flag.x + flag.width/2, flag.y, flag.x + flag.width/2, flag.y + flag.height, 0x0000FF, 1).setOrigin(0).setLineWidth(flag.width/2);
+            newLasor.alpha = 0;
+            lasorArray.push(newLasor);
+        });
     }
 
     // play scenens update metod
@@ -308,12 +329,12 @@ class CaveScene extends Phaser.Scene {
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
             this.ballCooldown = 2;
             this.time.addEvent({
-                delay: 100,
+                delay: 500,
                 callback: ()=>{
                     this.ballCooldown = 0;
                 }
             })
-            var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball').setScale(0.03);
+            var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball');
             // mousePointer följer inte med när skärmen scrollar, därför måste man
             // även addera kamerans scroll.
             let angle = Math.atan2(((this.game.input.mousePointer.y + this.cameras.main.scrollY) - ball.y), ((this.game.input.mousePointer.x + this.cameras.main.scrollX) - ball.x));
@@ -324,10 +345,9 @@ class CaveScene extends Phaser.Scene {
             ball.setCollideWorldBounds(true);
             ball.setVelocityY(Math.sin(angle)*1000);
             ball.setVelocityX(Math.cos(angle)*1000);
-            ball.setCircle(ball.body.width/2);
+            //ball.setCircle(ball.body.width/2);
 
-            var snowParticle = dis.add.particles('snowParticle');
-            ball.data.values.emitter = snowParticle.createEmitter({
+            ball.data.values.emitter = this.snowParticle.createEmitter({
                 speed: 50,
                 gravity: {x: 0, y: 400},
                 lifespan: 200,
@@ -406,13 +426,11 @@ class CaveScene extends Phaser.Scene {
         //#endregion
 
         //#region bossAI
-        let bullet = this.enemySnowBall;
-        let lazor = this.laserBall;
-        let lasorGroup = this.lasor;
 
+        let bullet = this.enemySnowBall;
         if(this.boss.countActive(true) > 0) {
             this.boss.children.iterate(function(child){
-                if(child.data.values.hp <= 0 && child.data.values.currentMove == "none") {
+                if(child.data.values.hp <= 0 && child.data.values.currentMove == "none" && !child.data.values.isEngraged) {
                     dis.enterPhase2(child);
                     //dis.finishBoss(child);
                 }
@@ -439,119 +457,25 @@ class CaveScene extends Phaser.Scene {
                         var enemyBullet = bullet.create(child.body.x + 50, child.body.y + 50, 'snowball').setScale(0.05);
                         enemyBullet.setTint(0xFF0000);
                         enemyBullet.setVelocityY(150);
+                        enemyBullet.setDataEnabled();
+                        enemyBullet.setData({time: 100});
                     }
                     let rand = Faser.Math.FloatBetween(0, 1000);
                     if(rand < 5 && child.data.values.currentMove == "none" && !child.data.values.isEngraged) {
                         child.data.values.currentMove = "bulletSweep";
-                        bulletSweep(child);
+                        dis.bulletSweep(child);
                     } else if(child.data.values.isEngraged && rand < 5 && child.data.values.currentMove == "none") {
                         console.log("init lasor move");
                         child.data.values.currentMove = "bigLasor";
-                        bigLasor(child);
+                        dis.bigLasor(child);
                     }
                 }
             })
-        }
-
-        function bulletSweep(boss) {
-            dis.tweens.add({
-                targets: boss,
-                x: 1000,
-                y: 1000,
-                duration: 3000,
-                ease: 'Power4',
-                delay: 0
-            });
-            dis.time.addEvent({
-                delay: 2000,
-                callback: ()=>{
-                    dis.time.addEvent({
-                        callback: ()=>{
-                            boss.data.values.isTracking = true;
-                            let shot = lazor.create(boss.x, boss.y, 'snowball');
-                            shot.setScale(0.03);
-                            shot.setTint(0x00FF00);
-                            shot.setDataEnabled();
-                            shot.setData({
-                                line: dis.add.line(0, 0, shot.x, shot.y, playerr.x, playerr.y, 0x0000FF).setOrigin(0).setLineWidth(1),
-                                isTracking: true,
-                                hasBeenShot: false,
-                                parent: boss
-                            });
-                        },
-                        delay: 100,
-                        repeat: 10
-                    })
-                },
-            })
-            dis.tweens.add({
-                targets: boss,
-                x: 1750,
-                y: 1250,
-                duration: 2000,
-                ease: 'Power2',
-                delay: 2000
-            });
-            dis.tweens.add({
-                targets: boss,
-                y: 1000,
-                duration: 2000,
-                ease: 'linear',
-                delay: 4000
-            });
-            dis.time.addEvent({
-                delay: 7000,
-                callback: ()=>{
-                   boss.data.values.currentMove = "none";
-                }
-            })
-        }
-
-        function bigLasor(boss) {
-            console.log("wee");
-            map.getObjectLayer('Lasor').objects.forEach((flag) => {
-                // iterera över spikarna, skapa spelobjekt
-                let newLasor = dis.add.line(0, 0, flag.x + flag.width/2, flag.y, flag.x + flag.width/2, flag.y + flag.height, 0x0000FF, 1).setOrigin(0).setLineWidth(flag.width/2);
-                newLasor.alpha = 0;
-                dis.tweens.add({
-                    targets: newLasor,
-                    alpha: 0.3,
-                    duration: 3000,
-                    delay: 1000,
-                    ease: 'linear'
-                });
-                dis.tweens.add({
-                    targets: newLasor,
-                    alpha: 1,
-                    duration: 0,
-                    delay: 4000,
-                    ease: 'Sine.easeInOut'
-                });
-                dis.time.addEvent({
-                    delay: 4000,
-                    callback: ()=>{
-                        dis.lasorOverlap.active = true;
-                        dis.time.addEvent({
-                            delay: 20,
-                            callback: ()=>{
-                                dis.lasorOverlap.active = false;
-                            }
-                        })
-                    }
-                })
-                dis.tweens.add({
-                    targets: newLasor,
-                    alpha: 0,
-                    duration: 200,
-                    delay: 4020,
-                    ease: 'Sine.easeInOut'
-                });
-            });
         }
 
         //Känns onödigt att ha två separata identiska funktioner men Phasers hela physics system brakade 
         //när dem var under samma och jag vette fan varför
-        if(this.boss.countActive(true) > 0) {
+        if(this.laserBall.countActive(true) > 0) {
             this.laserBall.children.iterate(function(child){
                 if(child.data.values.parent.data.values.isTracking) {
                     var angle = Math.atan2((playerr.y - child.y), (playerr.x - child.x));
@@ -559,8 +483,10 @@ class CaveScene extends Phaser.Scene {
                     dis.time.addEvent({
                         delay: 2000,
                         callback: ()=>{
-                            if(child.data.values.parent.data != undefined) {
-                                child.data.values.parent.data.values.isTracking = false;
+                            if(child != null) {
+                                if(child.data.values.parent.data != undefined) {
+                                    child.data.values.parent.data.values.isTracking = false;
+                                }
                             }
                         }
                     })
@@ -581,6 +507,26 @@ class CaveScene extends Phaser.Scene {
                 }
             })
         }
+        
+        this.enemySnowBall.children.iterate(function(child){
+            if(child != null) {
+                if(child.data.values.time > 0) {
+                    child.data.values.time--;
+                } else {
+                    child.destroy();
+                }
+            }
+        });
+
+        this.laserBall.children.iterate(function(child){
+            if(child != null) {
+                if(child.data.values.time > 0) {
+                    child.data.values.time--;
+                } else {
+                    child.destroy();
+                }
+            }
+        });
         //#endregion
     }
         
@@ -646,6 +592,110 @@ class CaveScene extends Phaser.Scene {
             frames: [{ key: 'player', frame: 'jefrens_5' }],
             frameRate: 10
         });
+    }
+    bulletSweep(boss) {
+        dis.tweens.add({
+            targets: boss,
+            x: 1000,
+            y: 1000,
+            duration: 3000,
+            ease: 'Power4',
+            delay: 0
+        });
+        dis.time.addEvent({
+            delay: 2000,
+            callback: ()=>{
+                dis.time.addEvent({
+                    callback: ()=>{
+                        boss.data.values.isTracking = true;
+                        let shot = dis.laserBall.create(boss.x, boss.y, 'snowball');
+                        shot.setTint(0x00FF00);
+                        shot.setDataEnabled();
+                        shot.setData({
+                            line: dis.add.line(0, 0, shot.x, shot.y, playerr.x, playerr.y, 0x0000FF).setOrigin(0).setLineWidth(1),
+                            isTracking: true,
+                            hasBeenShot: false,
+                            parent: boss,
+                            time: 250
+                        });
+                    },
+                    delay: 100,
+                    repeat: 10
+                })
+            },
+        })
+        dis.tweens.add({
+            targets: boss,
+            x: 1750,
+            y: 1250,
+            duration: 2000,
+            ease: 'Power2',
+            delay: 2000
+        });
+        dis.tweens.add({
+            targets: boss,
+            y: 1000,
+            duration: 2000,
+            ease: 'linear',
+            delay: 4000
+        });
+        dis.time.addEvent({
+            delay: 7000,
+            callback: ()=>{
+               boss.data.values.currentMove = "none";
+            }
+        })
+    }
+
+    bigLasor(boss) {
+        dis.time.addEvent({
+            delay: 300,
+            callback: ()=>{
+                for(let i = 896; i < 2464; i += 20){
+                    //laserEmitter.emitParticle(3, i, 928);
+                }
+            },
+            repeat: 5
+        })
+
+        for(let i = 0; i < lasorArray.length; i++) {
+            dis.tweens.add({
+                targets: lasorArray[i],
+                alpha: 0.3,
+                duration: 1000,
+                delay: 1000,
+                ease: 'linear'
+            });
+            dis.tweens.add({
+                targets: lasorArray[i],
+                alpha: 1,
+                duration: 0,
+                delay: 2000,
+                ease: 'Sine.easeInOut'
+            });
+            dis.time.addEvent({
+                delay: 2000,
+                callback: ()=>{
+                    lasorArray[i].alpha = 1;
+                    dis.lasorOverlap.active = true;
+                    dis.time.addEvent({
+                        delay: 20,
+                        callback: ()=>{
+                            dis.lasorOverlap.active = false;
+                            boss.data.values.currentMove = "none";
+                            lasorArray[i].alpha = 0;
+                        }
+                    })
+                }
+            })
+            dis.tweens.add({
+                targets: lasorArray[i],
+                alpha: 0,
+                duration: 200,
+                delay: 2020,
+                ease: 'Sine.easeInOut'
+            });
+        }
     }
 }
 
