@@ -179,7 +179,7 @@ class CaveScene extends Phaser.Scene {
             var Boss = this.boss.create(1000, 1000, 'jens').setScale(0.25);
             Boss.setDataEnabled();
             Boss.setData({
-                hp: 100,
+                hp: 1000,
                 shotCooldown: 0,
                 currentMove: "none",
                 isTracking: false,
@@ -329,7 +329,7 @@ class CaveScene extends Phaser.Scene {
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
             this.ballCooldown = 2;
             this.time.addEvent({
-                delay: 500,
+                delay: 10,
                 callback: ()=>{
                     this.ballCooldown = 0;
                 }
@@ -428,13 +428,17 @@ class CaveScene extends Phaser.Scene {
         //#region bossAI
 
         let bullet = this.enemySnowBall;
+        this.boss.children.iterate(function(child){
+            if(child.data.values.hp <= 0 && child.data.values.currentMove == "none") {
+                dis.finishBoss(child);
+            }
+        })
         if(this.boss.countActive(true) > 0) {
             this.boss.children.iterate(function(child){
-                if(child.data.values.hp <= 0 && child.data.values.currentMove == "none" && !child.data.values.isEngraged) {
-                    dis.enterPhase2(child);
-                    //dis.finishBoss(child);
-                }
-                if(child != null) {
+                if(child != null && child.data.values.hp > 0) {
+                    if(child.data.values.hp <= 500 && child.data.values.currentMove == "none" && !child.data.values.isEngraged) {
+                        dis.enterPhase2(child);
+                    }
                     if(child.data.values.shotCooldown > 0) {
                         child.data.values.shotCooldown--;
                     }
@@ -454,7 +458,7 @@ class CaveScene extends Phaser.Scene {
                     }
                     if(child.body.x - playerr.body.x < 60 && child.data.values.shotCooldown == 0 && child.data.values.currentMove == "none") {
                         child.data.values.shotCooldown = 100;
-                        var enemyBullet = bullet.create(child.body.x + 50, child.body.y + 50, 'snowball').setScale(0.05);
+                        var enemyBullet = bullet.create(child.body.x + 50, child.body.y + 50, 'snowball').setScale(2);
                         enemyBullet.setTint(0xFF0000);
                         enemyBullet.setVelocityY(150);
                         enemyBullet.setDataEnabled();
@@ -550,7 +554,14 @@ class CaveScene extends Phaser.Scene {
     }
 
     finishBoss(boss) {
-        boss.destroy();
+        boss.setVisible(false);
+        boss.disableBody();
+        dis.time.addEvent({
+            delay: 10000,
+            callback: ()=>{
+                boss.destroy();
+            }
+        })
         dis.cameras.main.pan(playerr.x, playerr.y , 3000);
         dis.cameras.main.setBounds(0,0, 3000, 10000);
         dis.player.disableBody();
@@ -652,7 +663,7 @@ class CaveScene extends Phaser.Scene {
             delay: 300,
             callback: ()=>{
                 for(let i = 896; i < 2464; i += 20){
-                    //laserEmitter.emitParticle(3, i, 928);
+                    laserEmitter.emitParticle(3, i, 928);
                 }
             },
             repeat: 5
@@ -682,7 +693,9 @@ class CaveScene extends Phaser.Scene {
                         delay: 20,
                         callback: ()=>{
                             dis.lasorOverlap.active = false;
-                            boss.data.values.currentMove = "none";
+                            if(boss != undefined){
+                                boss.data.values.currentMove = "none";
+                            }
                             lasorArray[i].alpha = 0;
                         }
                     })
