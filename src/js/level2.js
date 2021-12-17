@@ -113,7 +113,7 @@ class CaveScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // skapa en spelare och ge den studs
-        this.player = this.physics.add.sprite(1000, 1000, 'player',{
+        this.player = this.physics.add.sprite(100, 100, 'player',{
             hp: 100,
             immunity: false
         });
@@ -204,8 +204,8 @@ class CaveScene extends Phaser.Scene {
 
         this.physics.add.collider(this.boss, this.platforms);
         this.physics.add.collider(this.boss, bossDoor);
-        this.physics.add.overlap(this.boss, this.snowballs, hurtBoss, null, this);
-        function hurtBoss(boss, ball) {
+        this.physics.add.overlap(this.boss, this.snowballs, hurtEnemy, null, this);
+        function hurtEnemy(boss, ball) {
             boss.data.values.hp -= 10;
             console.log(boss.data.values.hp);
             destroyBall(ball);
@@ -250,6 +250,94 @@ class CaveScene extends Phaser.Scene {
         });
         this.physics.add.overlap(this.laserBall, this.player, hurt, null, this);
 
+        //#endregion
+
+        //#region basic enemy
+        this.koopa = this.physics.add.group({
+            hp: 100,
+            hasJumped: false
+        });
+        this.physics.add.collider(this.koopa, this.platforms);
+        this.physics.add.overlap(this.koopa, this.player, enemyHurt, null, this);
+        this.physics.add.overlap(this.koopa, this.snowballs, hurtBasicEnemy, null, this);
+        function enemyHurt(player, koopa){
+            if(!player.data.values.immunity) {
+                player.data.values.immunity = true
+                this.time.addEvent({
+                    delay: 240,
+                    callback: ()=>{
+                        player.data.values.immunity = false;
+                    }
+                })
+                player.data.values.hp -= 5;
+                if(player.data.values.hp < 0) {
+                    player.data.values.hp = 0;
+                }
+            }
+            player.setTint(0xFF0000);
+            this.time.addEvent({
+                delay: 60,
+                callback: ()=>{
+                    player.setTint(0xFFFFFF);
+                }
+            });
+            this.updateText();
+        }
+        function hurtBasicEnemy(koopa, ball) {
+            koopa.data.values.hp -= 10;
+            destroyBall(ball);
+            koopa.setTint(0xFF0000);
+            this.time.addEvent({
+                delay: 60,
+                callback: ()=>{
+                    koopa.setTint(0xFFFFFF);
+                }
+            });
+        }
+
+        map.getObjectLayer('Enemy spawn').objects.forEach((enemy) => {
+            // iterera över spikarna, skapa spelobjekt
+            const newEnemy = this.koopa
+                .create(enemy.x, enemy.y, 'foe')
+                .setOrigin(0);
+            newEnemy.body
+                .setSize(enemy.width, enemy.height)
+                .setOffset(0, 0)
+                .setVelocityX(40);
+            newEnemy.setDataEnabled();
+            newEnemy.setData({
+                hp: 100,
+                hasJumped: false
+            });
+        });
+        //#endregion
+
+        //#region flying enemy
+        this.flyer = this.physics.add.group({
+            hp: 100,
+            isTracking: false,
+            allowGravity: false,
+            right: false,
+            heGoing: false
+        });
+        map.getObjectLayer('flyerSpawn').objects.forEach((enemy) => {
+            // iterera över spikarna, skapa spelobjekt
+            const newEnemy = this.flyer
+                .create(enemy.x, enemy.y, 'foe')
+                .setOrigin(0);
+            newEnemy.body
+                .setSize(enemy.width, enemy.height)
+                .setOffset(0, 0)
+            newEnemy.setDataEnabled();
+            newEnemy.setData({
+                hp: 100,
+                isTracking: false,
+                right: false,
+                heGoing: false
+            });
+        });
+        this.physics.add.overlap(this.flyer, this.player, enemyHurt, null, this);
+        this.physics.add.overlap(this.flyer, this.snowballs, hurtBasicEnemy, null, this);
         //#endregion
 
         //#endregion
@@ -532,6 +620,72 @@ class CaveScene extends Phaser.Scene {
             }
         });
         //#endregion
+    
+        //#region enemyAI
+        this.koopa.children.iterate(function(child){
+            if(child != null) {
+                if(child.data.values.hp <= 0) {
+                    child.destroy();
+                } else if(!child.body.onFloor()){
+                    console.log("wee");
+                    if(!child.data.values.hasJumped) {
+                        child.body.velocity.x *= -1;
+                        child.setVelocityY(-20);
+                        child.data.values.hasJumped = true;
+                    }
+                } else {
+                    child.data.values.hasJumped = false;
+                }
+            }
+
+            
+        });
+        //#endregion
+    
+        //#region flyerAI
+        this.flyer.children.iterate(function(child){
+            
+            if(child != null){
+                if(child.data.values.hp <= 0) {
+                    child.destroy();
+                } else {
+                    if(child.data.values.isTracking) {
+                        let angle = Math.atan2((playerr.y - child.y), (playerr.x - child.x));
+                        child.setVelocityY(Math.sin(angle)*150);
+                        child.setVelocityX(Math.cos(angle)*150);
+                    }
+                    if(!child.data.values.heGoing) {
+                        child.data.values.heGoing = true;
+                        if(child.data.values.right){
+                            console.log("right")
+                            child.setVelocityX(150);
+                            console.log(child.body.velocity.x);
+                        } else {
+                            console.log("left");
+                            child.setVelocityX(-150);
+                        }
+                        dis.time.addEvent({
+                            delay: 2000,
+                            callback: ()=>{
+                                try {
+                                    child.data.values.right = !child.data.values.right;
+                                    child.data.values.heGoing = false;
+                                } catch (error) { }
+                            }
+                        });
+                    }
+                    if(Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) < 200) {
+                        child.data.values.isTracking = true;
+                    } else if(Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) > 300 && child.data.values.isTracking) {
+                        child.data.values.isTracking = false;
+                        child.setVelocityY(0);
+                        child.setVelocityX(0);
+                    }
+                }
+            }
+        });
+        //#endregion
+
     }
         
        

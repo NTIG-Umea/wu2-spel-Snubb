@@ -263,7 +263,7 @@ class TutorialScene extends Phaser.Scene {
         }
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
             this.ballCooldown = 20;
-            var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball').setScale(0.03);
+            var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball');
             // mousePointer följer inte med när skärmen scrollar, därför måste man
             // även addera kamerans scroll.
             var angle = Math.atan2((this.game.input.mousePointer.y - ball.y), ((this.game.input.mousePointer.x + this.cameras.main.scrollX) - ball.x));
