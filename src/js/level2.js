@@ -44,10 +44,10 @@ class CaveScene extends Phaser.Scene {
         Faser = Phaser;
 
         this.cameras.main.setSize(900, 600);
-        this.cameras.main.setBounds(0,0, 3000, 10000);
+        this.cameras.main.setBounds(0,0, 2528, 2112);
         this.cameras.main.setZoom(0.9);
 
-        this.physics.world.setBounds( 0, 0, 2500, 10000 );
+        this.physics.world.setBounds( 0, 0, 2528, 2112 );
 
         this.snowParticle = this.add.particles('snowParticle');
 
@@ -76,8 +76,10 @@ class CaveScene extends Phaser.Scene {
 
         // initiera animationer, detta är flyttat till en egen metod
         // för att göra create metoden mindre rörig
-        this.initAnims();
+        //this.initAnims();
+        this.initNewAnims();
 
+        this.imageBackground = this.add.image(-40, -25, 'newBackground').setOrigin(0).setScale(1.5, 1.45).setScrollFactor(0.3).setDepth(-102);
         this.backgroundProof = map.createLayer('BackgroundProof', tileset).setDepth(-101);
         this.background = map.createLayer('Background', tileset).setDepth(-100);
         
@@ -116,11 +118,10 @@ class CaveScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // skapa en spelare och ge den studs
-        this.player = this.physics.add.sprite(100, 100, 'player',{
+        this.player = this.physics.add.sprite(100, 100, 'newPlayer',{
             hp: 100,
             immunity: false
         });
-        this.player.setCircle(this.player.width/2);
         this.player.setDataEnabled();
         this.player.setData({hp: 100, immunity: false});
         this.player.setBounce(0);
@@ -308,7 +309,8 @@ class CaveScene extends Phaser.Scene {
             newEnemy.body
                 .setSize(enemy.width, enemy.height)
                 .setOffset(0, 0)
-                .setVelocityX(40);
+                .setVelocityX(60)
+                .setBounceX(1);
             newEnemy.setDataEnabled();
             newEnemy.setData({
                 hp: 100,
@@ -341,6 +343,7 @@ class CaveScene extends Phaser.Scene {
                 heGoing: false
             });
         });
+        this.physics.add.collider(this.flyer, this.platforms);
         this.physics.add.overlap(this.flyer, this.player, enemyHurt, null, this);
         this.physics.add.overlap(this.flyer, this.snowballs, hurtBasicEnemy, null, this);
         //#endregion
@@ -484,7 +487,7 @@ class CaveScene extends Phaser.Scene {
             // Only show the idle animation if the player is footed
             // If this is not included, the player would look idle while jumping
             if (this.player.body.onFloor()) {
-                this.player.play('idle', true);
+                //this.player.play('idle', true);
             }
         }
 
@@ -679,9 +682,9 @@ class CaveScene extends Phaser.Scene {
                             }
                         });
                     }
-                    if(Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) < 200) {
+                    if(Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) < 400) {
                         child.data.values.isTracking = true;
-                    } else if(Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) > 300 && child.data.values.isTracking) {
+                    } else if(Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) > 600 && child.data.values.isTracking) {
                         child.data.values.isTracking = false;
                         child.setVelocityY(0);
                         child.setVelocityX(0);
@@ -763,6 +766,13 @@ class CaveScene extends Phaser.Scene {
             frames: [{ key: 'player', frame: 'jefrens_5' }],
             frameRate: 10
         });
+    }
+    initNewAnims() {
+        this.anims.create({
+            key: 'walk',
+            frames: this.anims.generateFrameNames('newPlayer'),
+            frameRate: 16
+        })
     }
     bulletSweep(boss) {
         dis.tweens.add({

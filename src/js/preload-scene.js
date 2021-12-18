@@ -25,6 +25,7 @@ class PreloadScene extends Phaser.Scene {
             '/images/jefrens_hero.png',
             '/images/jefrens_hero.json'
         );
+        this.load.spritesheet('newPlayer', '/images/nisse.png', { frameWidth: 32, frameHeight: 64 });
         this.load.atlas(
             'foe',
             '/images/jefrens_foe.png',
