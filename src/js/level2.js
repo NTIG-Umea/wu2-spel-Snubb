@@ -77,6 +77,7 @@ class CaveScene extends Phaser.Scene {
         // för att göra create metoden mindre rörig
         //this.initAnims();
         this.initNewAnims();
+        this.initSnowManAnims();
 
         this.imageBackground = this.add.image(-40, -25, 'newBackground').setOrigin(0).setScale(1.5, 1.45).setScrollFactor(0.3).setDepth(-102);
         this.backgroundProof = map.createLayer('BackgroundProof', tileset).setDepth(-101);
@@ -173,7 +174,7 @@ class CaveScene extends Phaser.Scene {
             map.getObjectLayer('Doorpos').objects.forEach((flag) => {
                 // iterera över spikarna, skapa spelobjekt
                 const newDoor = bossDoor
-                    .create(flag.x, flag.y, 'white_platform')
+                    .create(flag.x, flag.y, 'temp_platform')
                     .setOrigin(0);
                 newDoor.body
                     .setSize(flag.width, flag.height)
@@ -300,13 +301,13 @@ class CaveScene extends Phaser.Scene {
         }
 
         map.getObjectLayer('Enemy spawn').objects.forEach((enemy) => {
-            // iterera över spikarna, skapa spelobjekt
             const newEnemy = this.koopa
-                .create(enemy.x, enemy.y, 'foe')
-                .setOrigin(0);
+                .create(enemy.x, enemy.y, 'snowman')
+                .setOrigin(0)
+                .play('snowWalk', true);
             newEnemy.body
-                .setSize(enemy.width, enemy.height)
-                .setOffset(0, 0)
+                .setSize(55, 60)
+                .setOffset(0, 5)
                 .setVelocityX(60)
                 .setBounceX(1);
             newEnemy.setDataEnabled();
@@ -628,6 +629,13 @@ class CaveScene extends Phaser.Scene {
         //#region enemyAI
         this.koopa.children.iterate(function(child){
             if(child != null) {
+                child.play('snowWalk', true);
+                if (child.body.velocity.x > 0) {
+                    child.setFlipX(false);
+                } else if (child.body.velocity.x < 0) {
+                    // otherwise, make them face the other side
+                    child.setFlipX(true);
+                }
                 if(child.data.values.hp <= 0) {
                     child.destroy();
                 } else if(!child.body.onFloor()){
@@ -718,7 +726,7 @@ class CaveScene extends Phaser.Scene {
             }
         });
         dis.cameras.main.pan(playerr.x, playerr.y , 3000);
-        dis.cameras.main.setBounds(0,0, 3000, 10000);
+        this.cameras.main.setBounds(0,0, 2528, 2112);
         dis.player.disableBody();
         dis.player.setVelocityX(0);
         dis.player.setVelocityY(0);
@@ -732,6 +740,10 @@ class CaveScene extends Phaser.Scene {
                 dis.player.enableBody();
             }
         })
+    }
+
+    rayCast(user, target) {
+
     }
 
     // när vi skapar scenen så körs initAnims för att ladda spelarens animationer
@@ -763,6 +775,13 @@ class CaveScene extends Phaser.Scene {
         this.anims.create({
             key: 'walk',
             frames: this.anims.generateFrameNames('newPlayer'),
+            frameRate: 16
+        })
+    }
+    initSnowManAnims(){
+        this.anims.create({
+            key: 'snowWalk',
+            frames: this.anims.generateFrameNames('snowman'),
             frameRate: 16
         })
     }

@@ -15,7 +15,6 @@ function destroyBall(ball) {
         let w = -10;
         if(ball.x - playerr.x > 0) {
             w = 16;
-            console.log(w);
         }
         snowCrashEmitter.emitParticle(10, ball.x + w, ball.y);
 
@@ -41,7 +40,7 @@ class TutorialScene extends Phaser.Scene {
         Faser = Phaser;
 
         this.cameras.main.setSize(900, 600);
-        this.cameras.main.setBounds(0,0, 3000, 600);
+        this.cameras.main.setBounds(0,0, 2528, 600);
 
         this.physics.world.setBounds( 0, 0, 2500, 600 );
 
@@ -72,13 +71,16 @@ class TutorialScene extends Phaser.Scene {
         // skapa en tilemap från JSON filen vi preloadade
         const map = this.make.tilemap({ key: 'tutorial_map', tileWidth: 32, tileHeight: 32 });
         // ladda in tilesetbilden till vår tilemap
-        const tileset = map.addTilesetImage('32_tileset', 'tiles');
+        const tileset = map.addTilesetImage('tileset_32', 'tiles2');
 
         // initiera animationer, detta är flyttat till en egen metod
         // för att göra create metoden mindre rörig
-        this.initAnims();
+        //this.initAnims();
+        this.initNewAnims();
+        this.initSnowManAnims();
 
         this.background = map.createLayer('Background', tileset).setDepth(-100);
+        this.imageBackground = this.add.image(0, 0, 'newBackground').setOrigin(0).setScale(1.6, 1.65).setScrollFactor(0.3).setDepth(-102);
 
         this.gate = this.physics.add.group({
             allowGravity: false
@@ -112,6 +114,8 @@ class TutorialScene extends Phaser.Scene {
         this.platforms = map.createLayer('Platforms', tileset);
         this.platforms.setCollisionByExclusion(-1, true);
 
+        this.snowPlatforms = map.createLayer('Snow', tileset);
+
         doorFlag = this.physics.add.group({
             allowGravity: false,
             immovable: true
@@ -131,8 +135,7 @@ class TutorialScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // skapa en spelare och ge den studs
-        this.player = this.physics.add.sprite(50, 300, 'player');
-        this.player.setCircle(this.player.width/2);
+        this.player = this.physics.add.sprite(50, 300, 'newPlayer');
         this.player.setBounce(0);
         this.player.setCollideWorldBounds(true);
         playerr = this.player;
@@ -158,7 +161,6 @@ class TutorialScene extends Phaser.Scene {
         this.physics.add.collider(this.snowballs, this.platforms);
         this.physics.add.overlap(this.snowballs, enemies, hurtEnemy, null, this)
         function hurtEnemy(ball, enemy) {
-            console.log("HIT");
             destroyBall(ball);
             enemy.setTint(0xFF0000);
             this.time.addEvent({
@@ -225,13 +227,12 @@ class TutorialScene extends Phaser.Scene {
             map.getObjectLayer('EnemySpawn').objects.forEach((enemy) => {
                 // iterera över spikarna, skapa spelobjekt
                 const newEnemy = enemies
-                    .create(enemy.x, enemy.y, 'foe')
+                    .create(enemy.x, enemy.y, 'snowman')
                     .setOrigin(0)
                     .setDataEnabled()
                     .setData({hp: 100});
                 
                 newEnemy.setCircle(newEnemy.width/2);
-                
             });
         }
         this.physics.add.collider(enemies, this.platforms);
@@ -323,7 +324,7 @@ class TutorialScene extends Phaser.Scene {
             // Only show the idle animation if the player is footed
             // If this is not included, the player would look idle while jumping
             if (this.player.body.onFloor()) {
-                this.player.play('idle', true);
+                //this.player.play('idle', true);
             }
         }
 
@@ -347,6 +348,13 @@ class TutorialScene extends Phaser.Scene {
     //#endregion
 
         enemies.children.iterate(function(child){
+            child.play('snowWalk', true);
+            if (child.body.velocity.x > 0) {
+                child.setFlipX(false);
+            } else if (child.body.velocity.x < 0) {
+                // otherwise, make them face the other side
+                child.setFlipX(true);
+            }
             if(child.x - playerr.x > 0) {
                 child.body.velocity.x = -50
             } else {
@@ -424,6 +432,20 @@ class TutorialScene extends Phaser.Scene {
             frames: [{ key: 'player', frame: 'jefrens_5' }],
             frameRate: 10
         });
+    }
+    initNewAnims() {
+        this.anims.create({
+            key: 'walk',
+            frames: this.anims.generateFrameNames('newPlayer'),
+            frameRate: 16
+        })
+    }
+    initSnowManAnims(){
+        this.anims.create({
+            key: 'snowWalk',
+            frames: this.anims.generateFrameNames('snowman'),
+            frameRate: 16
+        })
     }
 }
 
