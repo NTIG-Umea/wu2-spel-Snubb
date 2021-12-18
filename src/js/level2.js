@@ -18,7 +18,6 @@ function destroyBall(ball) {
         let w = -10;
         if(ball.x - playerr.x > 0) {
             w = 16;
-            console.log(w);
         }
         snowCrashEmitter.emitParticle(10, ball.x + w, ball.y);
 
@@ -213,7 +212,6 @@ class CaveScene extends Phaser.Scene {
         this.physics.add.overlap(this.boss, this.snowballs, hurtEnemy, null, this);
         function hurtEnemy(boss, ball) {
             boss.data.values.hp -= 10;
-            console.log(boss.data.values.hp);
             destroyBall(ball);
             boss.setTint(0xFF0000);
             this.time.addEvent({
@@ -396,7 +394,6 @@ class CaveScene extends Phaser.Scene {
         this.lasorOverlap = this.physics.add.overlap(this.lasor, this.player, lasorHurt, null, this);
         this.lasorOverlap.active = false;
         function lasorHurt(player, lasor) {
-            console.log("LAOSR");
             if(!player.data.values.immunity) {
                 player.data.values.hp -= 40;
             }
@@ -565,7 +562,6 @@ class CaveScene extends Phaser.Scene {
                         child.data.values.currentMove = "bulletSweep";
                         dis.bulletSweep(child);
                     } else if(child.data.values.isEngraged && rand < 5 && child.data.values.currentMove == "none") {
-                        console.log("init lasor move");
                         child.data.values.currentMove = "bigLasor";
                         dis.bigLasor(child);
                     }
@@ -635,7 +631,6 @@ class CaveScene extends Phaser.Scene {
                 if(child.data.values.hp <= 0) {
                     child.destroy();
                 } else if(!child.body.onFloor()){
-                    console.log("wee");
                     if(!child.data.values.hasJumped) {
                         child.body.velocity.x *= -1;
                         child.setVelocityY(-20);
@@ -658,18 +653,15 @@ class CaveScene extends Phaser.Scene {
                     child.destroy();
                 } else {
                     if(child.data.values.isTracking) {
-                        let angle = Math.atan2((playerr.y - child.y), (playerr.x - child.x));
+                        let angle = Math.atan2((playerr.y - (child.y + child.height/2)), (playerr.x - (child.x + child.width/2)));
                         child.setVelocityY(Math.sin(angle)*150);
                         child.setVelocityX(Math.cos(angle)*150);
                     }
                     if(!child.data.values.heGoing) {
                         child.data.values.heGoing = true;
                         if(child.data.values.right){
-                            console.log("right")
                             child.setVelocityX(150);
-                            console.log(child.body.velocity.x);
                         } else {
-                            console.log("left");
                             child.setVelocityX(-150);
                         }
                         dis.time.addEvent({
