@@ -72,12 +72,13 @@ class CaveScene extends Phaser.Scene {
         // skapa en tilemap från JSON filen vi preloadade
         map = this.make.tilemap({ key: 'cave_map', tileWidth: 32, tileHeight: 32 });
         // ladda in tilesetbilden till vår tilemap
-        tileset = map.addTilesetImage('jefrens_tilesheet', 'tiles');
+        tileset = map.addTilesetImage('tileset_32', 'tiles2');
 
         // initiera animationer, detta är flyttat till en egen metod
         // för att göra create metoden mindre rörig
         this.initAnims();
 
+        this.backgroundProof = map.createLayer('BackgroundProof', tileset).setDepth(-101);
         this.background = map.createLayer('Background', tileset).setDepth(-100);
         
         
@@ -100,6 +101,8 @@ class CaveScene extends Phaser.Scene {
         // sätt collisionen
         this.platforms = map.createLayer('Platforms', tileset);
         this.platforms.setCollisionByExclusion(-1, true);
+
+        this.platformSnow = map.createLayer('Snow', tileset);
 
         this.tempPlatforms = map.createLayer('TempPlatforms', tileset);
         this.tempPlatforms.setCollisionByExclusion(-1, true);
@@ -184,6 +187,7 @@ class CaveScene extends Phaser.Scene {
                 currentMove: "none",
                 isTracking: false,
                 isEngraged: false,
+                dead: false
             });
             Boss.setDepth(-50);
         }
@@ -199,7 +203,8 @@ class CaveScene extends Phaser.Scene {
             shotCooldown: 1000,
             currentMove: "none",
             isTracking: false,
-            isEngraged: false
+            isEngraged: false,
+            dead: false
         });
 
         this.physics.add.collider(this.boss, this.platforms);
@@ -417,7 +422,7 @@ class CaveScene extends Phaser.Scene {
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
             this.ballCooldown = 2;
             this.time.addEvent({
-                delay: 10,
+                delay: 200,
                 callback: ()=>{
                     this.ballCooldown = 0;
                 }
@@ -517,7 +522,7 @@ class CaveScene extends Phaser.Scene {
 
         let bullet = this.enemySnowBall;
         this.boss.children.iterate(function(child){
-            if(child.data.values.hp <= 0 && child.data.values.currentMove == "none") {
+            if(child.data.values.hp <= 0 && child.data.values.currentMove == "none" && !child.data.values.dead) {
                 dis.finishBoss(child);
             }
         })
@@ -708,6 +713,7 @@ class CaveScene extends Phaser.Scene {
     }
 
     finishBoss(boss) {
+        boss.data.values.dead = true;
         boss.setVisible(false);
         boss.disableBody();
         dis.time.addEvent({
@@ -715,7 +721,7 @@ class CaveScene extends Phaser.Scene {
             callback: ()=>{
                 boss.destroy();
             }
-        })
+        });
         dis.cameras.main.pan(playerr.x, playerr.y , 3000);
         dis.cameras.main.setBounds(0,0, 3000, 10000);
         dis.player.disableBody();

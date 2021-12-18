@@ -15,8 +15,8 @@ class PreloadScene extends Phaser.Scene {
     create() {
     
 
-        
-        this.text = this.add.text(0, (this.game.config.height / 2) - 64, 'Welcome Traveler', {
+        this.background = this.add.image(0, 0, 'newBackground').setOrigin(0).setScale(1, 1.7);    
+        this.text = this.add.text(0, (this.game.config.height / 2) - 64, 'Select stage', {
             fontFamily: '"Mochiy Pop P One"',
             fontSize: '64px',
             fill: '#ff0000',

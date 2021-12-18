@@ -10,6 +10,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.audio('oof', '/sounds/oof.mp3');
         this.load.audio('vineBoom', '/sounds/VineBoom.mp3');
         this.load.image('background', '/images/background.png');
+        this.load.image('newBackground', '/images/BakgrundNordpolen.png');
         this.load.image('spike', '/images/spike.png');
         this.load.image('snowball', './images/snowball.png');
         this.load.image('rock', './images/rock.png');
@@ -30,6 +31,7 @@ class PreloadScene extends Phaser.Scene {
             '/images/jefrens_foe.json'
         );
         this.load.image('tiles', '/tilesets/jefrens_tilesheet.png');
+        this.load.image('tiles2', '/tilesets/tileset_32.png');
         // här laddar vi in en tilemap med spelets "karta"
         this.load.tilemapTiledJSON('map', '/tilemaps/level1.json');
         this.load.tilemapTiledJSON('long_map', '/tilemaps/looong_looong_maaaaaaaan.json');

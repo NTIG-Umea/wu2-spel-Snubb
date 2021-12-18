@@ -258,11 +258,14 @@ class TutorialScene extends Phaser.Scene {
         this.cameras.main.startFollow(this.player);
            
         //#region Throw snowball
-        if(this.ballCooldown > 0) {
-            this.ballCooldown--;
-        }
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
-            this.ballCooldown = 20;
+            this.ballCooldown = 2;
+            this.time.addEvent({
+                delay: 200,
+                callback: ()=>{
+                    this.ballCooldown = 0;
+                }
+            })
             var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball');
             // mousePointer följer inte med när skärmen scrollar, därför måste man
             // även addera kamerans scroll.
