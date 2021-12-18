@@ -229,8 +229,15 @@ class CaveScene extends Phaser.Scene {
         this.physics.add.overlap(this.enemySnowBall, this.player, hurt, null, this);
         function hurt(player, ball) {
             player.data.values.hp -= 5;
-            if(player.data.values.hp < 0) {
+            if(player.data.values.hp <= 0) {
                 player.data.values.hp = 0;
+                dis.time.addEvent({
+                    delay: 60,
+                    callback: ()=>{
+                        dis.scene.pause();
+                        dis.scene.launch('GameOverScene');
+                    }
+                })
             }
             ball.setVisible(false);
             ball.disableBody();
@@ -275,9 +282,17 @@ class CaveScene extends Phaser.Scene {
                     }
                 })
                 player.data.values.hp -= 5;
-                if(player.data.values.hp < 0) {
-                    player.data.values.hp = 0;
-                }
+                
+            }
+            if(player.data.values.hp <= 0) {
+                player.data.values.hp = 0;
+                dis.time.addEvent({
+                    delay: 60,
+                    callback: ()=>{
+                        dis.scene.pause();
+                        dis.scene.launch('GameOverScene');
+                    }
+                })
             }
             player.setTint(0xFF0000);
             this.time.addEvent({
@@ -397,6 +412,16 @@ class CaveScene extends Phaser.Scene {
         function lasorHurt(player, lasor) {
             if(!player.data.values.immunity) {
                 player.data.values.hp -= 40;
+                if(player.data.values.hp <= 0) {
+                    player.data.values.hp = 0;
+                    dis.time.addEvent({
+                        delay: 60,
+                        callback: ()=>{
+                            dis.scene.pause();
+                            dis.scene.launch('GameOverScene');
+                        }
+                    })
+                }
             }
             player.data.values.immunity = true;
             dis.time.addEvent({

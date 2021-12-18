@@ -1,7 +1,3 @@
-import TestScene from "./testing";
-import TestLongScene from "./longtest";
-import CaveScene from "./level2";
-
 var testTrigger = false;
 var lvl1trigger = false;
 var lvl2trigger = false;

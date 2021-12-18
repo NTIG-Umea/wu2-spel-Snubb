@@ -254,8 +254,6 @@ class TutorialScene extends Phaser.Scene {
 
     // play scenens update metod
     update() {
-
-
         this.cameras.main.startFollow(this.player);
            
         //#region Throw snowball
