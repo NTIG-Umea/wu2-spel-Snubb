@@ -20,6 +20,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('snowParticle', '/images/snowflake.png');
         this.load.image('jens', '/images/jens.png');
         this.load.image('temp_platform', '/images/tempPlatform.png');
+        this.load.image('santaTop', '/images/santaTop.png');
         this.load.atlas(
             'player',
             '/images/jefrens_hero.png',
@@ -27,6 +28,7 @@ class PreloadScene extends Phaser.Scene {
         );
         this.load.spritesheet('newPlayer', '/images/nisse.png', { frameWidth: 32, frameHeight: 64 });
         this.load.spritesheet('snowman', '/images/snowman.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('santa', '/images/santa.png', { frameWidth: 64, frameHeight: 64 });
         this.load.atlas(
             'foe',
             '/images/jefrens_foe.png',

@@ -1,6 +1,6 @@
-class GameOverScene extends Phaser.Scene {
+class GameOverScene1 extends Phaser.Scene {
     constructor() {
-        super('GameOverScene');
+        super('GameOverScene1');
     }
 
     create() {
@@ -21,7 +21,7 @@ class GameOverScene extends Phaser.Scene {
     update() {
         if (this.keyObR.isDown) {
             // resumera spelscenen
-            this.scene.launch('CaveScene');
+            this.scene.launch('TutorialScene');
             // göm denna scen
             this.scene.setVisible(false);
             this.scene.pause();
@@ -29,4 +29,4 @@ class GameOverScene extends Phaser.Scene {
     }
 }
 
-export default GameOverScene;
+export default GameOverScene1;

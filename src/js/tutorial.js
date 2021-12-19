@@ -138,6 +138,11 @@ class TutorialScene extends Phaser.Scene {
         this.player = this.physics.add.sprite(50, 300, 'newPlayer');
         this.player.setBounce(0);
         this.player.setCollideWorldBounds(true);
+        this.player.setDataEnabled();
+        this.player.setData({
+            hp: 100,
+            immunity: false
+        })
         playerr = this.player;
 
         // krocka med platforms lagret
@@ -177,6 +182,40 @@ class TutorialScene extends Phaser.Scene {
                 pressButton(this.gateButton);
             }
         }
+        this.physics.add.overlap(enemies, this.player, hurt, null, this);
+        function hurt(player, koopa){
+            if(!player.data.values.immunity) {
+                player.data.values.immunity = true
+                this.time.addEvent({
+                    delay: 240,
+                    callback: ()=>{
+                        player.data.values.immunity = false;
+                    }
+                })
+                player.data.values.hp -= 5;
+                
+            }
+            if(player.data.values.hp <= 0) {
+                player.data.values.hp = 0;
+                dis.time.addEvent({
+                    delay: 60,
+                    callback: ()=>{
+                        dis.scene.pause();
+                        dis.scene.launch('GameOverScene1');
+                    }
+                })
+            }
+            player.setTint(0xFF0000);
+            this.time.addEvent({
+                delay: 60,
+                callback: ()=>{
+                    player.setTint(0xFFFFFF);
+                }
+            });
+            this.updateText();
+        }
+
+
         this.ballCooldown = 0;
 
         //#endregion
@@ -249,7 +288,21 @@ class TutorialScene extends Phaser.Scene {
             lifespan: { min: 500, max: 1000 },
         })
 
+        this.text = this.add.text(16, 16, '', {
+            fontSize: '20px',
+            fill: '#ffffff'
+        });
+        this.text.setScrollFactor(0);
         
+        this.hpBarBack = this.add.rectangle(16, 16, 200, this.text.height, 0x000000);
+        this.hpBarBack.setOrigin(0, 0);
+        this.hpBarBack.setScrollFactor(0);
+
+        this.hpBar = this.add.rectangle(16, 16, 200, this.text.height, 0x00FF00);
+        this.hpBar.setOrigin(0);
+        this.hpBar.setScrollFactor(0);
+        
+        this.updateText();
     }
 
     // play scenens update metod
@@ -353,7 +406,7 @@ class TutorialScene extends Phaser.Scene {
                 // otherwise, make them face the other side
                 child.setFlipX(true);
             }
-            if(child.x - playerr.x > 0) {
+            if(child.x - playerr.x + playerr.width > 0) {
                 child.body.velocity.x = -50
             } else {
                 child.body.velocity.x = 50;
@@ -402,8 +455,9 @@ class TutorialScene extends Phaser.Scene {
     // metoden updateText för att uppdatera overlaytexten i spelet
     updateText() {
         this.text.setText(
-            `Arrow keys to move. Space to jump. W to pause. doord: ${this.doord}`
+            `HP: ${this.player.data.values.hp}`
         );
+        this.hpBar.width = 2*this.player.data.values.hp;
     }
 
     // när vi skapar scenen så körs initAnims för att ladda spelarens animationer

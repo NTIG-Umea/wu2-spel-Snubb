@@ -7,7 +7,8 @@ import TestScene from './testing';
 import TestLongScene from './longtest';
 import TutorialScene from './tutorial';
 import CaveScene from './level2';
-import GameOVerScene from './gameover';
+import GameOverScene from './gameover';
+import GameOverScene1 from './gameover1';
 
 // spelets config
 const config = {
@@ -23,7 +24,7 @@ const config = {
             debug: true
         }
     },
-    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene, TestLongScene, TutorialScene, CaveScene, GameOVerScene],
+    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene, TestLongScene, TutorialScene, CaveScene, GameOverScene, GameOverScene1],
     parent: 'game'
 };
 
