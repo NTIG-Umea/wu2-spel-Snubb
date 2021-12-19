@@ -79,6 +79,7 @@ class CaveScene extends Phaser.Scene {
         this.initNewAnims();
         this.initSnowManAnims();
         this.initBossAnims();
+        this.initBatAnims();
 
         this.imageBackground = this.add.image(-40, -25, 'newBackground').setOrigin(0).setScale(1.5, 1.45).setScrollFactor(0.3).setDepth(-102);
         this.backgroundProof = map.createLayer('BackgroundProof', tileset).setDepth(-101);
@@ -119,7 +120,7 @@ class CaveScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // skapa en spelare och ge den studs
-        this.player = this.physics.add.sprite(1000, 1000, 'newPlayer',{
+        this.player = this.physics.add.sprite(100, 100, 'newPlayer',{
             hp: 100,
             immunity: false
         });
@@ -346,8 +347,9 @@ class CaveScene extends Phaser.Scene {
         map.getObjectLayer('flyerSpawn').objects.forEach((enemy) => {
             // iterera över spikarna, skapa spelobjekt
             const newEnemy = this.flyer
-                .create(enemy.x, enemy.y, 'foe')
-                .setOrigin(0);
+                .create(enemy.x, enemy.y, 'bat')
+                .setOrigin(0)
+                .setScale(2);
             newEnemy.body
                 .setSize(enemy.width, enemy.height)
                 .setOffset(0, 0)
@@ -358,6 +360,7 @@ class CaveScene extends Phaser.Scene {
                 right: false,
                 heGoing: false
             });
+            newEnemy.setCircle(newEnemy.width/2.25);
         });
         this.physics.add.collider(this.flyer, this.platforms);
         this.physics.add.overlap(this.flyer, this.player, enemyHurt, null, this);
@@ -702,13 +705,21 @@ class CaveScene extends Phaser.Scene {
         this.flyer.children.iterate(function(child){
             
             if(child != null){
+                if (child.body.velocity.x > 0) {
+                    child.setFlipX(true);
+                } else if (child.body.velocity.x < 0) {
+                    child.setFlipX(false);
+                }
                 if(child.data.values.hp <= 0) {
                     child.destroy();
                 } else {
                     if(child.data.values.isTracking) {
+                        child.play('batChase', true);
                         let angle = Math.atan2((playerr.y - (child.y + child.height/2)), (playerr.x - (child.x + child.width/2)));
                         child.setVelocityY(Math.sin(angle)*150);
                         child.setVelocityX(Math.cos(angle)*150);
+                    } else {
+                        child.play('batIdle', true);
                     }
                     if(!child.data.values.heGoing) {
                         child.data.values.heGoing = true;
@@ -765,10 +776,12 @@ class CaveScene extends Phaser.Scene {
         boss.data.values.dead = true;
         boss.setVisible(false);
         boss.disableBody();
+        dis.santaTop.setVisible(false);
         dis.time.addEvent({
             delay: 10000,
             callback: ()=>{
                 boss.destroy();
+                dis.santaTop.destroy();
             }
         });
         dis.cameras.main.pan(playerr.x, playerr.y , 3000);
@@ -845,6 +858,18 @@ class CaveScene extends Phaser.Scene {
             })
           });
           
+    }
+    initBatAnims(){
+        this.anims.create({
+            key: 'batIdle',
+            frames: this.anims.generateFrameNames('bat'),
+            frameRate: 10
+        });
+        this.anims.create({
+            key: 'batChase',
+            frames: this.anims.generateFrameNames('bat'),
+            frameRate: 20
+        })
     }
     bulletSweep(boss) {
         dis.santaTop.setTint(0x00FF00);

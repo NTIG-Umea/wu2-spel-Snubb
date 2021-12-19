@@ -87,9 +87,10 @@ class TutorialScene extends Phaser.Scene {
         });
         
 
-        this.gateButton = this.physics.add.sprite(1280, 350, ':)', {
+        this.gateButton = this.physics.add.sprite(1280, 350, 'button', {
             pressed: false
         });
+        this.gateButton.setScale(2);
         this.gateButton.setDataEnabled();
         this.gateButton.setImmovable();
         this.gateButton.body.setAllowGravity(false);
@@ -287,6 +288,12 @@ class TutorialScene extends Phaser.Scene {
             on: false,
             lifespan: { min: 500, max: 1000 },
         })
+
+        this.text = this.add.text(100, (this.game.config.height / 2), 'WASD/space to move \n E to throw snowball, aim with mouse', {
+                fontFamily: '"Mochiy Pop P One"',
+                fontSize: '16px',
+                fill: '#ff0000'
+            });
 
         this.text = this.add.text(16, 16, '', {
             fontSize: '20px',
