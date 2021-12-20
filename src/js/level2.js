@@ -53,6 +53,13 @@ class CaveScene extends Phaser.Scene {
 
 
         //#region Key Listeners
+        this.input.on('pointerdown', function (pointer) {
+            this.pointerIsDown = true;
+        }, this);
+
+        this.input.on('pointerup', function (pointer) {
+            this.pointerIsDown = false;
+        }, this);
         this.keyObjE = this.input.keyboard.addKey('E'); //For throwing snowballs
         this.keyObjQ = this.input.keyboard.addKey('Q'); // första ability
         this.keyObjW = this.input.keyboard.addKey('W');
@@ -471,7 +478,16 @@ class CaveScene extends Phaser.Scene {
         this.physics.add.overlap(this.clearFlag, this.player, clear, null, this);
         function clear(clearflag, player){
             if(cleared) {
-                console.log("CLEARED");
+                this.grats = this.add.text(0, (this.game.config.height / 2) - 32, 'Congrats \n The game is over\n Goodbye', {
+                    fontFamily: '"Mochiy Pop P One"',
+                    fontSize: '48px',
+                    fill: '#ff0000',
+                    align: 'center',
+                    fixedWidth: this.game.config.width,
+                    fixedHeight: this.game.config.height,
+                });
+                this.grats.setScrollFactor(0);
+                this.scene.pause();
             } else {
                 console.log("NOT CLEARED");
             }
@@ -488,7 +504,7 @@ class CaveScene extends Phaser.Scene {
         this.graphics.clear();
            
         //#region Throw snowball
-        if(this.keyObjE.isDown && this.ballCooldown == 0) {
+        if((this.keyObjE.isDown || this.pointerIsDown) && this.ballCooldown == 0) {
             this.ballCooldown = 2;
             this.time.addEvent({
                 delay: 200,

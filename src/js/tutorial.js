@@ -52,6 +52,13 @@ class TutorialScene extends Phaser.Scene {
 
 
         //#region Key Listeners
+        this.input.on('pointerdown', function (pointer) {
+            this.pointerIsDown = true;
+        }, this);
+
+        this.input.on('pointerup', function (pointer) {
+            this.pointerIsDown = false;
+        }, this);
         this.keyObjE = this.input.keyboard.addKey('E'); //For throwing snowballs
         this.keyObjQ = this.input.keyboard.addKey('Q'); // första ability
         this.keyObjW = this.input.keyboard.addKey('W');
@@ -288,7 +295,7 @@ class TutorialScene extends Phaser.Scene {
             lifespan: { min: 500, max: 1000 },
         })
 
-        this.text = this.add.text(100, (this.game.config.height / 2), 'WASD/space to move \n E to throw snowball, aim with mouse', {
+        this.text = this.add.text(100, (this.game.config.height / 2), 'WASD/space to move \n E or click to throw snowball, aim with mouse', {
                 fontFamily: '"Mochiy Pop P One"',
                 fontSize: '16px',
                 fill: '#ff0000'
@@ -316,7 +323,7 @@ class TutorialScene extends Phaser.Scene {
         this.cameras.main.startFollow(this.player);
            
         //#region Throw snowball
-        if(this.keyObjE.isDown && this.ballCooldown == 0) {
+        if((this.keyObjE.isDown || this.pointerIsDown) && this.ballCooldown == 0) {
             this.ballCooldown = 2;
             this.time.addEvent({
                 delay: 200,
