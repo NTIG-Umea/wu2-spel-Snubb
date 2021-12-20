@@ -674,9 +674,11 @@ class CaveScene extends Phaser.Scene {
                         delay: 2000,
                         callback: ()=>{
                             if(child != null) {
-                                if(child.data.values.parent.data != undefined) {
-                                    child.data.values.parent.data.values.isTracking = false;
-                                }
+                                try {
+                                    if(child.data.values.parent.data != undefined) {
+                                        child.data.values.parent.data.values.isTracking = false;
+                                    }
+                                } catch (error) { }
                             }
                         }
                     })
