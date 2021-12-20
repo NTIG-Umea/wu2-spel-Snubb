@@ -1,4 +1,5 @@
 //#region En massa variabler och funktioner här utanför så att phaser blir glad
+
 //Utan detta klagar den på massa ställen att saker inte är defined
 var dis;
 var Faser;
@@ -453,10 +454,38 @@ class CaveScene extends Phaser.Scene {
             newLasor.alpha = 0;
             lasorArray.push(newLasor);
         });
+
+        this.clearFlag = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+        map.getObjectLayer('ClearFlag').objects.forEach((flag) => {
+            // iterera över spikarna, skapa spelobjekt
+            const newFlag = this.clearFlag
+                .create(flag.x, flag.y, 'empty')
+                .setOrigin(0);
+            newFlag.body
+                .setSize(flag.width, flag.height)
+                .setOffset(0, 0);
+        });
+        this.physics.add.overlap(this.clearFlag, this.player, clear, null, this);
+        function clear(clearflag, player){
+            if(cleared) {
+                console.log("CLEARED");
+            } else {
+                console.log("NOT CLEARED");
+            }
+        }
+
+        this.graphics = this.add.graphics({
+            lineStyle: {width: 1, color: 0xFF0000}
+        })
     }
 
     // play scenens update metod
     update() {
+
+        this.graphics.clear();
            
         //#region Throw snowball
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
@@ -738,9 +767,9 @@ class CaveScene extends Phaser.Scene {
                             }
                         });
                     }
-                    if(Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) < 400) {
+                    if(Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) < 400 && dis.rayCast(child, playerr) == 0) {
                         child.data.values.isTracking = true;
-                    } else if(Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) > 600 && child.data.values.isTracking) {
+                    } else if((Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) > 600 || dis.rayCast(child, playerr) > 0) && child.data.values.isTracking) {
                         child.data.values.isTracking = false;
                         child.setVelocityY(0);
                         child.setVelocityX(0);
@@ -750,6 +779,9 @@ class CaveScene extends Phaser.Scene {
         });
         //#endregion
 
+        //#region clear condition
+        
+        //#endregion
     }
         
        
@@ -773,6 +805,7 @@ class CaveScene extends Phaser.Scene {
     }
 
     finishBoss(boss) {
+        cleared = true;
         boss.data.values.dead = true;
         boss.setVisible(false);
         boss.disableBody();
@@ -802,7 +835,11 @@ class CaveScene extends Phaser.Scene {
     }
 
     rayCast(user, target) {
+        let line = new Phaser.Geom.Line(user.x + user.width, user.y + user.height, target.x, target.y);
 
+        let overlappingTiles = this.platforms.getTilesWithinShape(line, { isColliding: true});
+
+        return overlappingTiles.length
     }
 
     // när vi skapar scenen så körs initAnims för att ladda spelarens animationer
@@ -891,7 +928,7 @@ class CaveScene extends Phaser.Scene {
                         shot.setTint(0x00FF00);
                         shot.setDataEnabled();
                         shot.setData({
-                            line: dis.add.line(0, 0, shot.x, shot.y, playerr.x, playerr.y, 0x0000FF).setOrigin(0).setLineWidth(1),
+                            line: dis.add.line(0, 0, shot.x, shot.y, playerr.x, playerr.y, 0x0000FF, 113).setOrigin(0).setLineWidth(1),
                             isTracking: true,
                             hasBeenShot: false,
                             parent: boss,

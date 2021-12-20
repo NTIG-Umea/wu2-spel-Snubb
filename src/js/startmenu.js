@@ -20,8 +20,16 @@ class PreloadScene extends Phaser.Scene {
             fixedWidth: this.game.config.width,
             fixedHeight: this.game.config.height,
         });
+        this.startText = this.add.text(0, (this.game.config.height / 2) + 32, 'Start', {
+            fontFamily: '"Mochiy Pop P One"',
+            fontSize: '32px',
+            fill: '#ff0000',
+            align: 'center',
+            fixedWidth: this.game.config.width,
+            fixedHeight: this.game.config.height,
+        });
 
-        var lvl1 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 64, 'spike').setInteractive();
+        var lvl1 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 64, 'empty').setInteractive();
         var lvl2 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 128, 'player').setInteractive();
         var lvl3 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 192, 'spike').setInteractive();
 

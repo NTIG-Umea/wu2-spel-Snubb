@@ -103,9 +103,8 @@ class TutorialScene extends Phaser.Scene {
         map.getObjectLayer('Doors').objects.forEach((door) => {
             // iterera över spikarna, skapa spelobjekt
             const doorSprite = doors
-                .create(door.x, door.y, 'gate')
+                .create(door.x, door.y, 'door')
                 .setOrigin(0)
-                .setScale(0.10, 0.40) //Detta behövs inte om jag har en sprite som är rätt storlek
                 .setDataEnabled();
         });
 
