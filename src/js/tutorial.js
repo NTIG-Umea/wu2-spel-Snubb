@@ -15,7 +15,6 @@ function destroyBall(ball) {
         let w = -10;
         if(ball.x - playerr.x > 0) {
             w = 16;
-            console.log(w);
         }
         snowCrashEmitter.emitParticle(10, ball.x + w, ball.y);
 
@@ -41,7 +40,7 @@ class TutorialScene extends Phaser.Scene {
         Faser = Phaser;
 
         this.cameras.main.setSize(900, 600);
-        this.cameras.main.setBounds(0,0, 3000, 600);
+        this.cameras.main.setBounds(0,0, 2528, 600);
 
         this.physics.world.setBounds( 0, 0, 2500, 600 );
 
@@ -72,22 +71,26 @@ class TutorialScene extends Phaser.Scene {
         // skapa en tilemap från JSON filen vi preloadade
         const map = this.make.tilemap({ key: 'tutorial_map', tileWidth: 32, tileHeight: 32 });
         // ladda in tilesetbilden till vår tilemap
-        const tileset = map.addTilesetImage('32_tileset', 'tiles');
+        const tileset = map.addTilesetImage('tileset_32', 'tiles2');
 
         // initiera animationer, detta är flyttat till en egen metod
         // för att göra create metoden mindre rörig
-        this.initAnims();
+        //this.initAnims();
+        this.initNewAnims();
+        this.initSnowManAnims();
 
         this.background = map.createLayer('Background', tileset).setDepth(-100);
+        this.imageBackground = this.add.image(0, 0, 'newBackground').setOrigin(0).setScale(1.6, 1.65).setScrollFactor(0.3).setDepth(-102);
 
         this.gate = this.physics.add.group({
             allowGravity: false
         });
         
 
-        this.gateButton = this.physics.add.sprite(1280, 350, ':)', {
+        this.gateButton = this.physics.add.sprite(1280, 350, 'button', {
             pressed: false
         });
+        this.gateButton.setScale(2);
         this.gateButton.setDataEnabled();
         this.gateButton.setImmovable();
         this.gateButton.body.setAllowGravity(false);
@@ -100,9 +103,8 @@ class TutorialScene extends Phaser.Scene {
         map.getObjectLayer('Doors').objects.forEach((door) => {
             // iterera över spikarna, skapa spelobjekt
             const doorSprite = doors
-                .create(door.x, door.y, 'gate')
+                .create(door.x, door.y, 'door')
                 .setOrigin(0)
-                .setScale(0.10, 0.40) //Detta behövs inte om jag har en sprite som är rätt storlek
                 .setDataEnabled();
         });
 
@@ -111,6 +113,8 @@ class TutorialScene extends Phaser.Scene {
         // sätt collisionen
         this.platforms = map.createLayer('Platforms', tileset);
         this.platforms.setCollisionByExclusion(-1, true);
+
+        this.snowPlatforms = map.createLayer('Snow', tileset);
 
         doorFlag = this.physics.add.group({
             allowGravity: false,
@@ -131,10 +135,14 @@ class TutorialScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // skapa en spelare och ge den studs
-        this.player = this.physics.add.sprite(50, 300, 'player');
-        this.player.setCircle(this.player.width/2);
+        this.player = this.physics.add.sprite(50, 300, 'newPlayer');
         this.player.setBounce(0);
         this.player.setCollideWorldBounds(true);
+        this.player.setDataEnabled();
+        this.player.setData({
+            hp: 100,
+            immunity: false
+        })
         playerr = this.player;
 
         // krocka med platforms lagret
@@ -158,7 +166,6 @@ class TutorialScene extends Phaser.Scene {
         this.physics.add.collider(this.snowballs, this.platforms);
         this.physics.add.overlap(this.snowballs, enemies, hurtEnemy, null, this)
         function hurtEnemy(ball, enemy) {
-            console.log("HIT");
             destroyBall(ball);
             enemy.setTint(0xFF0000);
             this.time.addEvent({
@@ -175,6 +182,40 @@ class TutorialScene extends Phaser.Scene {
                 pressButton(this.gateButton);
             }
         }
+        this.physics.add.overlap(enemies, this.player, hurt, null, this);
+        function hurt(player, koopa){
+            if(!player.data.values.immunity) {
+                player.data.values.immunity = true
+                this.time.addEvent({
+                    delay: 240,
+                    callback: ()=>{
+                        player.data.values.immunity = false;
+                    }
+                })
+                player.data.values.hp -= 5;
+                
+            }
+            if(player.data.values.hp <= 0) {
+                player.data.values.hp = 0;
+                dis.time.addEvent({
+                    delay: 60,
+                    callback: ()=>{
+                        dis.scene.pause();
+                        dis.scene.launch('GameOverScene1');
+                    }
+                })
+            }
+            player.setTint(0xFF0000);
+            this.time.addEvent({
+                delay: 60,
+                callback: ()=>{
+                    player.setTint(0xFFFFFF);
+                }
+            });
+            this.updateText();
+        }
+
+
         this.ballCooldown = 0;
 
         //#endregion
@@ -225,13 +266,12 @@ class TutorialScene extends Phaser.Scene {
             map.getObjectLayer('EnemySpawn').objects.forEach((enemy) => {
                 // iterera över spikarna, skapa spelobjekt
                 const newEnemy = enemies
-                    .create(enemy.x, enemy.y, 'foe')
+                    .create(enemy.x, enemy.y, 'snowman')
                     .setOrigin(0)
                     .setDataEnabled()
                     .setData({hp: 100});
                 
                 newEnemy.setCircle(newEnemy.width/2);
-                
             });
         }
         this.physics.add.collider(enemies, this.platforms);
@@ -248,22 +288,43 @@ class TutorialScene extends Phaser.Scene {
             lifespan: { min: 500, max: 1000 },
         })
 
+        this.text = this.add.text(100, (this.game.config.height / 2), 'WASD/space to move \n E to throw snowball, aim with mouse', {
+                fontFamily: '"Mochiy Pop P One"',
+                fontSize: '16px',
+                fill: '#ff0000'
+            });
+
+        this.text = this.add.text(16, 16, '', {
+            fontSize: '20px',
+            fill: '#ffffff'
+        });
+        this.text.setScrollFactor(0);
         
+        this.hpBarBack = this.add.rectangle(16, 16, 200, this.text.height, 0x000000);
+        this.hpBarBack.setOrigin(0, 0);
+        this.hpBarBack.setScrollFactor(0);
+
+        this.hpBar = this.add.rectangle(16, 16, 200, this.text.height, 0x00FF00);
+        this.hpBar.setOrigin(0);
+        this.hpBar.setScrollFactor(0);
+        
+        this.updateText();
     }
 
     // play scenens update metod
     update() {
-
-
         this.cameras.main.startFollow(this.player);
            
         //#region Throw snowball
-        if(this.ballCooldown > 0) {
-            this.ballCooldown--;
-        }
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
-            this.ballCooldown = 20;
-            var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball').setScale(0.03);
+            this.ballCooldown = 2;
+            this.time.addEvent({
+                delay: 200,
+                callback: ()=>{
+                    this.ballCooldown = 0;
+                }
+            })
+            var ball = this.snowballs.create(this.player.x + 15, this.player.y - 15, 'snowball');
             // mousePointer följer inte med när skärmen scrollar, därför måste man
             // även addera kamerans scroll.
             var angle = Math.atan2((this.game.input.mousePointer.y - ball.y), ((this.game.input.mousePointer.x + this.cameras.main.scrollX) - ball.x));
@@ -320,7 +381,7 @@ class TutorialScene extends Phaser.Scene {
             // Only show the idle animation if the player is footed
             // If this is not included, the player would look idle while jumping
             if (this.player.body.onFloor()) {
-                this.player.play('idle', true);
+                //this.player.play('idle', true);
             }
         }
 
@@ -344,7 +405,14 @@ class TutorialScene extends Phaser.Scene {
     //#endregion
 
         enemies.children.iterate(function(child){
-            if(child.x - playerr.x > 0) {
+            child.play('snowWalk', true);
+            if (child.body.velocity.x > 0) {
+                child.setFlipX(false);
+            } else if (child.body.velocity.x < 0) {
+                // otherwise, make them face the other side
+                child.setFlipX(true);
+            }
+            if(child.x - playerr.x + playerr.width > 0) {
                 child.body.velocity.x = -50
             } else {
                 child.body.velocity.x = 50;
@@ -393,8 +461,9 @@ class TutorialScene extends Phaser.Scene {
     // metoden updateText för att uppdatera overlaytexten i spelet
     updateText() {
         this.text.setText(
-            `Arrow keys to move. Space to jump. W to pause. doord: ${this.doord}`
+            `HP: ${this.player.data.values.hp}`
         );
+        this.hpBar.width = 2*this.player.data.values.hp;
     }
 
     // när vi skapar scenen så körs initAnims för att ladda spelarens animationer
@@ -421,6 +490,20 @@ class TutorialScene extends Phaser.Scene {
             frames: [{ key: 'player', frame: 'jefrens_5' }],
             frameRate: 10
         });
+    }
+    initNewAnims() {
+        this.anims.create({
+            key: 'walk',
+            frames: this.anims.generateFrameNames('newPlayer'),
+            frameRate: 16
+        })
+    }
+    initSnowManAnims(){
+        this.anims.create({
+            key: 'snowWalk',
+            frames: this.anims.generateFrameNames('snowman'),
+            frameRate: 16
+        })
     }
 }
 

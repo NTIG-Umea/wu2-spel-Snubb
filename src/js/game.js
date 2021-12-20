@@ -7,22 +7,24 @@ import TestScene from './testing';
 import TestLongScene from './longtest';
 import TutorialScene from './tutorial';
 import CaveScene from './level2';
+import GameOverScene from './gameover';
+import GameOverScene1 from './gameover1';
 
 // spelets config
 const config = {
     type: Phaser.AUTO,
     width: 900,
     height: 550,
-    pixelArt: false,
+    pixelArt: true,
     transparent: true,
     physics: {
         default: 'arcade',
         arcade: {
             gravity: { y: 400 },
-            debug: true
+            debug: false
         }
     },
-    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene, TestLongScene, TutorialScene, CaveScene],
+    scene: [PreloadScene, PlayScene, MenuScene, StartScene, TestScene, TestLongScene, TutorialScene, CaveScene, GameOverScene, GameOverScene1],
     parent: 'game'
 };
 

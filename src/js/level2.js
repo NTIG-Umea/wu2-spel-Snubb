@@ -1,4 +1,5 @@
 //#region En massa variabler och funktioner här utanför så att phaser blir glad
+
 //Utan detta klagar den på massa ställen att saker inte är defined
 var dis;
 var Faser;
@@ -18,7 +19,6 @@ function destroyBall(ball) {
         let w = -10;
         if(ball.x - playerr.x > 0) {
             w = 16;
-            console.log(w);
         }
         snowCrashEmitter.emitParticle(10, ball.x + w, ball.y);
 
@@ -44,10 +44,10 @@ class CaveScene extends Phaser.Scene {
         Faser = Phaser;
 
         this.cameras.main.setSize(900, 600);
-        this.cameras.main.setBounds(0,0, 3000, 10000);
+        this.cameras.main.setBounds(0,0, 2528, 2112);
         this.cameras.main.setZoom(0.9);
 
-        this.physics.world.setBounds( 0, 0, 2500, 10000 );
+        this.physics.world.setBounds( 0, 0, 2528, 2112 );
 
         this.snowParticle = this.add.particles('snowParticle');
 
@@ -72,12 +72,18 @@ class CaveScene extends Phaser.Scene {
         // skapa en tilemap från JSON filen vi preloadade
         map = this.make.tilemap({ key: 'cave_map', tileWidth: 32, tileHeight: 32 });
         // ladda in tilesetbilden till vår tilemap
-        tileset = map.addTilesetImage('jefrens_tilesheet', 'tiles');
+        tileset = map.addTilesetImage('tileset_32', 'tiles2');
 
         // initiera animationer, detta är flyttat till en egen metod
         // för att göra create metoden mindre rörig
-        this.initAnims();
+        //this.initAnims();
+        this.initNewAnims();
+        this.initSnowManAnims();
+        this.initBossAnims();
+        this.initBatAnims();
 
+        this.imageBackground = this.add.image(-40, -25, 'newBackground').setOrigin(0).setScale(1.5, 1.45).setScrollFactor(0.3).setDepth(-102);
+        this.backgroundProof = map.createLayer('BackgroundProof', tileset).setDepth(-101);
         this.background = map.createLayer('Background', tileset).setDepth(-100);
         
         
@@ -101,6 +107,8 @@ class CaveScene extends Phaser.Scene {
         this.platforms = map.createLayer('Platforms', tileset);
         this.platforms.setCollisionByExclusion(-1, true);
 
+        this.platformSnow = map.createLayer('Snow', tileset);
+
         this.tempPlatforms = map.createLayer('TempPlatforms', tileset);
         this.tempPlatforms.setCollisionByExclusion(-1, true);
 
@@ -113,11 +121,10 @@ class CaveScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // skapa en spelare och ge den studs
-        this.player = this.physics.add.sprite(1000, 1000, 'player',{
+        this.player = this.physics.add.sprite(100, 100, 'newPlayer',{
             hp: 100,
             immunity: false
         });
-        this.player.setCircle(this.player.width/2);
         this.player.setDataEnabled();
         this.player.setData({hp: 100, immunity: false});
         this.player.setBounce(0);
@@ -170,13 +177,13 @@ class CaveScene extends Phaser.Scene {
             map.getObjectLayer('Doorpos').objects.forEach((flag) => {
                 // iterera över spikarna, skapa spelobjekt
                 const newDoor = bossDoor
-                    .create(flag.x, flag.y, 'white_platform')
+                    .create(flag.x, flag.y, 'temp_platform')
                     .setOrigin(0);
                 newDoor.body
                     .setSize(flag.width, flag.height)
                     .setOffset(0, 0);
             });
-            var Boss = this.boss.create(1000, 1000, 'jens').setScale(0.25);
+            var Boss = this.boss.create(1000, 1000, 'santa').setScale(2);
             Boss.setDataEnabled();
             Boss.setData({
                 hp: 1000,
@@ -184,8 +191,10 @@ class CaveScene extends Phaser.Scene {
                 currentMove: "none",
                 isTracking: false,
                 isEngraged: false,
+                dead: false
             });
             Boss.setDepth(-50);
+            this.santaTop = this.add.image(Boss.x + Boss.width, Boss.y - Boss.height - 10, 'santaTop').setScale(2);
         }
 
         //#endregion
@@ -199,15 +208,15 @@ class CaveScene extends Phaser.Scene {
             shotCooldown: 1000,
             currentMove: "none",
             isTracking: false,
-            isEngraged: false
+            isEngraged: false,
+            dead: false
         });
 
         this.physics.add.collider(this.boss, this.platforms);
         this.physics.add.collider(this.boss, bossDoor);
-        this.physics.add.overlap(this.boss, this.snowballs, hurtBoss, null, this);
-        function hurtBoss(boss, ball) {
+        this.physics.add.overlap(this.boss, this.snowballs, hurtEnemy, null, this);
+        function hurtEnemy(boss, ball) {
             boss.data.values.hp -= 10;
-            console.log(boss.data.values.hp);
             destroyBall(ball);
             boss.setTint(0xFF0000);
             this.time.addEvent({
@@ -224,8 +233,15 @@ class CaveScene extends Phaser.Scene {
         this.physics.add.overlap(this.enemySnowBall, this.player, hurt, null, this);
         function hurt(player, ball) {
             player.data.values.hp -= 5;
-            if(player.data.values.hp < 0) {
+            if(player.data.values.hp <= 0) {
                 player.data.values.hp = 0;
+                dis.time.addEvent({
+                    delay: 60,
+                    callback: ()=>{
+                        dis.scene.pause();
+                        dis.scene.launch('GameOverScene');
+                    }
+                })
             }
             ball.setVisible(false);
             ball.disableBody();
@@ -250,6 +266,106 @@ class CaveScene extends Phaser.Scene {
         });
         this.physics.add.overlap(this.laserBall, this.player, hurt, null, this);
 
+        //#endregion
+
+        //#region basic enemy
+        this.koopa = this.physics.add.group({
+            hp: 100,
+            hasJumped: false
+        });
+        this.physics.add.collider(this.koopa, this.platforms);
+        this.physics.add.overlap(this.koopa, this.player, enemyHurt, null, this);
+        this.physics.add.overlap(this.koopa, this.snowballs, hurtBasicEnemy, null, this);
+        function enemyHurt(player, koopa){
+            if(!player.data.values.immunity) {
+                player.data.values.immunity = true
+                this.time.addEvent({
+                    delay: 240,
+                    callback: ()=>{
+                        player.data.values.immunity = false;
+                    }
+                })
+                player.data.values.hp -= 5;
+                
+            }
+            if(player.data.values.hp <= 0) {
+                player.data.values.hp = 0;
+                dis.time.addEvent({
+                    delay: 60,
+                    callback: ()=>{
+                        dis.scene.pause();
+                        dis.scene.launch('GameOverScene');
+                    }
+                })
+            }
+            player.setTint(0xFF0000);
+            this.time.addEvent({
+                delay: 60,
+                callback: ()=>{
+                    player.setTint(0xFFFFFF);
+                }
+            });
+            this.updateText();
+        }
+        function hurtBasicEnemy(koopa, ball) {
+            koopa.data.values.hp -= 10;
+            destroyBall(ball);
+            koopa.setTint(0xFF0000);
+            this.time.addEvent({
+                delay: 60,
+                callback: ()=>{
+                    koopa.setTint(0xFFFFFF);
+                }
+            });
+        }
+
+        map.getObjectLayer('Enemy spawn').objects.forEach((enemy) => {
+            const newEnemy = this.koopa
+                .create(enemy.x, enemy.y, 'snowman')
+                .setOrigin(0)
+                .play('snowWalk', true);
+            newEnemy.body
+                .setSize(55, 60)
+                .setOffset(0, 5)
+                .setVelocityX(60)
+                .setBounceX(1);
+            newEnemy.setDataEnabled();
+            newEnemy.setData({
+                hp: 100,
+                hasJumped: false
+            });
+        });
+        //#endregion
+
+        //#region flying enemy
+        this.flyer = this.physics.add.group({
+            hp: 100,
+            isTracking: false,
+            allowGravity: false,
+            right: false,
+            heGoing: false
+        });
+        map.getObjectLayer('flyerSpawn').objects.forEach((enemy) => {
+            // iterera över spikarna, skapa spelobjekt
+            const newEnemy = this.flyer
+                .create(enemy.x, enemy.y, 'bat')
+                .setOrigin(0)
+                .setScale(2);
+            newEnemy.body
+                .setSize(enemy.width, enemy.height)
+                .setOffset(0, 0)
+            newEnemy.setDataEnabled();
+            newEnemy.setData({
+                hp: 100,
+                isTracking: false,
+                right: false,
+                heGoing: false
+            });
+            newEnemy.setCircle(newEnemy.width/2.25);
+        });
+        this.physics.add.collider(this.flyer, this.platforms);
+        this.physics.add.overlap(this.flyer, this.player, enemyHurt, null, this);
+        this.physics.add.overlap(this.flyer, this.snowballs, hurtBasicEnemy, null, this);
         //#endregion
 
         //#endregion
@@ -277,6 +393,15 @@ class CaveScene extends Phaser.Scene {
             fill: '#ffffff'
         });
         this.text.setScrollFactor(0);
+        
+        this.hpBarBack = this.add.rectangle(16, 16, 200, this.text.height, 0x000000);
+        this.hpBarBack.setOrigin(0, 0);
+        this.hpBarBack.setScrollFactor(0);
+
+        this.hpBar = this.add.rectangle(16, 16, 200, this.text.height, 0x00FF00);
+        this.hpBar.setOrigin(0);
+        this.hpBar.setScrollFactor(0);
+        
         this.updateText();
 
         this.lasor = this.physics.add.group({
@@ -300,9 +425,18 @@ class CaveScene extends Phaser.Scene {
         this.lasorOverlap = this.physics.add.overlap(this.lasor, this.player, lasorHurt, null, this);
         this.lasorOverlap.active = false;
         function lasorHurt(player, lasor) {
-            console.log("LAOSR");
             if(!player.data.values.immunity) {
                 player.data.values.hp -= 40;
+                if(player.data.values.hp <= 0) {
+                    player.data.values.hp = 0;
+                    dis.time.addEvent({
+                        delay: 60,
+                        callback: ()=>{
+                            dis.scene.pause();
+                            dis.scene.launch('GameOverScene');
+                        }
+                    })
+                }
             }
             player.data.values.immunity = true;
             dis.time.addEvent({
@@ -320,16 +454,44 @@ class CaveScene extends Phaser.Scene {
             newLasor.alpha = 0;
             lasorArray.push(newLasor);
         });
+
+        this.clearFlag = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+        map.getObjectLayer('ClearFlag').objects.forEach((flag) => {
+            // iterera över spikarna, skapa spelobjekt
+            const newFlag = this.clearFlag
+                .create(flag.x, flag.y, 'empty')
+                .setOrigin(0);
+            newFlag.body
+                .setSize(flag.width, flag.height)
+                .setOffset(0, 0);
+        });
+        this.physics.add.overlap(this.clearFlag, this.player, clear, null, this);
+        function clear(clearflag, player){
+            if(cleared) {
+                console.log("CLEARED");
+            } else {
+                console.log("NOT CLEARED");
+            }
+        }
+
+        this.graphics = this.add.graphics({
+            lineStyle: {width: 1, color: 0xFF0000}
+        })
     }
 
     // play scenens update metod
     update() {
+
+        this.graphics.clear();
            
         //#region Throw snowball
         if(this.keyObjE.isDown && this.ballCooldown == 0) {
             this.ballCooldown = 2;
             this.time.addEvent({
-                delay: 10,
+                delay: 200,
                 callback: ()=>{
                     this.ballCooldown = 0;
                 }
@@ -391,7 +553,7 @@ class CaveScene extends Phaser.Scene {
             // Only show the idle animation if the player is footed
             // If this is not included, the player would look idle while jumping
             if (this.player.body.onFloor()) {
-                this.player.play('idle', true);
+                //this.player.play('idle', true);
             }
         }
 
@@ -429,7 +591,9 @@ class CaveScene extends Phaser.Scene {
 
         let bullet = this.enemySnowBall;
         this.boss.children.iterate(function(child){
-            if(child.data.values.hp <= 0 && child.data.values.currentMove == "none") {
+            dis.santaTop.x = child.x;
+            dis.santaTop.y = child.y - child.height - 10;
+            if(child.data.values.hp <= 0 && child.data.values.currentMove == "none" && !child.data.values.dead) {
                 dis.finishBoss(child);
             }
         })
@@ -442,23 +606,30 @@ class CaveScene extends Phaser.Scene {
                     if(child.data.values.shotCooldown > 0) {
                         child.data.values.shotCooldown--;
                     }
-                    if(child.body.x > playerr.body.x + 60 && child.body.velocity.x > - 200) {
+                    if((child.body.x + child.width/2) > (playerr.body.x - playerr.body.width/2) + 60 && child.body.velocity.x > - 200) {
                         child.setVelocityX(child.body.velocity.x - 12)
-                    } else if(child.body.x > playerr.body.x && child.body.velocity.x > - 50){
+                    } else if((child.body.x + child.width/2) > (playerr.body.x - playerr.body.width/2) && child.body.velocity.x > - 50){
                         child.setVelocityX(child.body.velocity.x - 6)
                     } else {
                         child.setVelocityX(child.body.velocity.x + 12)
                     }
-                    if(child.body.x < playerr.body.x - 60 && child.body.velocity.x < 200) {
+                    if((child.body.x + child.width/2) < (playerr.body.x - playerr.body.width/2) - 60 && child.body.velocity.x < 200) {
                         child.setVelocityX(child.body.velocity.x + 12)
-                    } else if(child.body.x < playerr.body.x && child.body.velocity.x < 50){
+                    } else if((child.body.x + child.width/2) < (playerr.body.x - playerr.body.width/2) && child.body.velocity.x < 50){
                         child.setVelocityX(child.body.velocity.x + 6)
                     } else {
                         child.setVelocityX(child.body.velocity.x - 12)
                     }
-                    if(child.body.x - playerr.body.x < 60 && child.data.values.shotCooldown == 0 && child.data.values.currentMove == "none") {
+                    if(child.body.x - (playerr.body.x + playerr.body.width/2) < 60 && child.data.values.shotCooldown == 0 && child.data.values.currentMove == "none") {
+                        child.play('bossShoot', true);
+                        dis.time.addEvent({
+                            delay: 240,
+                            callback: ()=>{
+                                child.play('bossIdle', true);
+                            }
+                        })
                         child.data.values.shotCooldown = 100;
-                        var enemyBullet = bullet.create(child.body.x + 50, child.body.y + 50, 'snowball').setScale(2);
+                        var enemyBullet = bullet.create(child.body.x + child.width, child.body.y + child.height + 30, 'snowball').setScale(2);
                         enemyBullet.setTint(0xFF0000);
                         enemyBullet.setVelocityY(150);
                         enemyBullet.setDataEnabled();
@@ -469,7 +640,6 @@ class CaveScene extends Phaser.Scene {
                         child.data.values.currentMove = "bulletSweep";
                         dis.bulletSweep(child);
                     } else if(child.data.values.isEngraged && rand < 5 && child.data.values.currentMove == "none") {
-                        console.log("init lasor move");
                         child.data.values.currentMove = "bigLasor";
                         dis.bigLasor(child);
                     }
@@ -532,6 +702,86 @@ class CaveScene extends Phaser.Scene {
             }
         });
         //#endregion
+    
+        //#region enemyAI
+        this.koopa.children.iterate(function(child){
+            if(child != null) {
+                child.play('snowWalk', true);
+                if (child.body.velocity.x > 0) {
+                    child.setFlipX(false);
+                } else if (child.body.velocity.x < 0) {
+                    // otherwise, make them face the other side
+                    child.setFlipX(true);
+                }
+                if(child.data.values.hp <= 0) {
+                    child.destroy();
+                } else if(!child.body.onFloor()){
+                    if(!child.data.values.hasJumped) {
+                        child.body.velocity.x *= -1;
+                        child.setVelocityY(-20);
+                        child.data.values.hasJumped = true;
+                    }
+                } else {
+                    child.data.values.hasJumped = false;
+                }
+            }
+
+            
+        });
+        //#endregion
+    
+        //#region flyerAI
+        this.flyer.children.iterate(function(child){
+            
+            if(child != null){
+                if (child.body.velocity.x > 0) {
+                    child.setFlipX(true);
+                } else if (child.body.velocity.x < 0) {
+                    child.setFlipX(false);
+                }
+                if(child.data.values.hp <= 0) {
+                    child.destroy();
+                } else {
+                    if(child.data.values.isTracking) {
+                        child.play('batChase', true);
+                        let angle = Math.atan2((playerr.y - (child.y + child.height/2)), (playerr.x - (child.x + child.width/2)));
+                        child.setVelocityY(Math.sin(angle)*150);
+                        child.setVelocityX(Math.cos(angle)*150);
+                    } else {
+                        child.play('batIdle', true);
+                    }
+                    if(!child.data.values.heGoing) {
+                        child.data.values.heGoing = true;
+                        if(child.data.values.right){
+                            child.setVelocityX(150);
+                        } else {
+                            child.setVelocityX(-150);
+                        }
+                        dis.time.addEvent({
+                            delay: 2000,
+                            callback: ()=>{
+                                try {
+                                    child.data.values.right = !child.data.values.right;
+                                    child.data.values.heGoing = false;
+                                } catch (error) { }
+                            }
+                        });
+                    }
+                    if(Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) < 400 && dis.rayCast(child, playerr) == 0) {
+                        child.data.values.isTracking = true;
+                    } else if((Math.sqrt(Math.pow(child.x-playerr.x, 2)+Math.pow(child.y-playerr.y, 2)) > 600 || dis.rayCast(child, playerr) > 0) && child.data.values.isTracking) {
+                        child.data.values.isTracking = false;
+                        child.setVelocityY(0);
+                        child.setVelocityX(0);
+                    }
+                }
+            }
+        });
+        //#endregion
+
+        //#region clear condition
+        
+        //#endregion
     }
         
        
@@ -540,6 +790,7 @@ class CaveScene extends Phaser.Scene {
         this.text.setText(
             `HP: ${this.player.data.values.hp}`
         );
+        this.hpBar.width = 2*this.player.data.values.hp;
     }
 
     enterPhase2(boss) {
@@ -554,16 +805,20 @@ class CaveScene extends Phaser.Scene {
     }
 
     finishBoss(boss) {
+        cleared = true;
+        boss.data.values.dead = true;
         boss.setVisible(false);
         boss.disableBody();
+        dis.santaTop.setVisible(false);
         dis.time.addEvent({
             delay: 10000,
             callback: ()=>{
                 boss.destroy();
+                dis.santaTop.destroy();
             }
-        })
+        });
         dis.cameras.main.pan(playerr.x, playerr.y , 3000);
-        dis.cameras.main.setBounds(0,0, 3000, 10000);
+        this.cameras.main.setBounds(0,0, 2528, 2112);
         dis.player.disableBody();
         dis.player.setVelocityX(0);
         dis.player.setVelocityY(0);
@@ -577,6 +832,14 @@ class CaveScene extends Phaser.Scene {
                 dis.player.enableBody();
             }
         })
+    }
+
+    rayCast(user, target) {
+        let line = new Phaser.Geom.Line(user.x + user.width, user.y + user.height, target.x, target.y);
+
+        let overlappingTiles = this.platforms.getTilesWithinShape(line, { isColliding: true});
+
+        return overlappingTiles.length
     }
 
     // när vi skapar scenen så körs initAnims för att ladda spelarens animationer
@@ -604,7 +867,49 @@ class CaveScene extends Phaser.Scene {
             frameRate: 10
         });
     }
+    initNewAnims() {
+        this.anims.create({
+            key: 'walk',
+            frames: this.anims.generateFrameNames('newPlayer'),
+            frameRate: 16
+        })
+    }
+    initSnowManAnims(){
+        this.anims.create({
+            key: 'snowWalk',
+            frames: this.anims.generateFrameNames('snowman'),
+            frameRate: 16
+        })
+    }
+    initBossAnims(){
+        this.anims.create({
+            key: 'bossShoot',
+            frames: this.anims.generateFrameNames('santa'),
+            frameRate: 30
+        })
+        this.anims.create({
+            key: 'bossIdle',
+            frames: this.anims.generateFrameNames('santa', {
+              start: 0,
+              end: 0
+            })
+          });
+          
+    }
+    initBatAnims(){
+        this.anims.create({
+            key: 'batIdle',
+            frames: this.anims.generateFrameNames('bat'),
+            frameRate: 10
+        });
+        this.anims.create({
+            key: 'batChase',
+            frames: this.anims.generateFrameNames('bat'),
+            frameRate: 20
+        })
+    }
     bulletSweep(boss) {
+        dis.santaTop.setTint(0x00FF00);
         dis.tweens.add({
             targets: boss,
             x: 1000,
@@ -623,7 +928,7 @@ class CaveScene extends Phaser.Scene {
                         shot.setTint(0x00FF00);
                         shot.setDataEnabled();
                         shot.setData({
-                            line: dis.add.line(0, 0, shot.x, shot.y, playerr.x, playerr.y, 0x0000FF).setOrigin(0).setLineWidth(1),
+                            line: dis.add.line(0, 0, shot.x, shot.y, playerr.x, playerr.y, 0x0000FF, 113).setOrigin(0).setLineWidth(1),
                             isTracking: true,
                             hasBeenShot: false,
                             parent: boss,
@@ -651,14 +956,16 @@ class CaveScene extends Phaser.Scene {
             delay: 4000
         });
         dis.time.addEvent({
-            delay: 7000,
+            delay: 6000,
             callback: ()=>{
+                dis.santaTop.clearTint();
                boss.data.values.currentMove = "none";
             }
         })
     }
 
     bigLasor(boss) {
+        dis.santaTop.setTint(0x0000FF);
         dis.time.addEvent({
             delay: 300,
             callback: ()=>{
@@ -694,6 +1001,7 @@ class CaveScene extends Phaser.Scene {
                         callback: ()=>{
                             dis.lasorOverlap.active = false;
                             if(boss != undefined){
+                                dis.santaTop.clearTint();
                                 boss.data.values.currentMove = "none";
                             }
                             lasorArray[i].alpha = 0;
