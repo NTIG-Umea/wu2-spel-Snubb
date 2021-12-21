@@ -28,12 +28,17 @@ class PreloadScene extends Phaser.Scene {
             fixedWidth: this.game.config.width,
             fixedHeight: this.game.config.height,
         });
+        this.startText.setInteractive();
 
-        var lvl1 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 64, 'empty').setInteractive();
+        this.startText.on('pointerdown', function(pointer){
+            lvl1trigger = true;
+        })
+
+        /*var lvl1 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 64, 'empty').setInteractive();
         var lvl2 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 128, 'player').setInteractive();
-        var lvl3 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 192, 'spike').setInteractive();
+        var lvl3 = this.add.sprite(this.game.config.width / 2, (this.game.config.height / 2) + 192, 'spike').setInteractive();*/
 
-        lvl1.on('pointerdown', function(pointer){
+        /*lvl1.on('pointerdown', function(pointer){
             lvl1trigger = true;
         });
         lvl2.on('pointerdown', function(pointer){
@@ -41,7 +46,7 @@ class PreloadScene extends Phaser.Scene {
         });
         lvl3.on('pointerdown', function(pointer){
             lvl3trigger = true;
-        });
+        });*/
     }
 
     // scenens uppdate metod, lyssnar på keyDown

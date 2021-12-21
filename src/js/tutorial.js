@@ -35,6 +35,16 @@ class TutorialScene extends Phaser.Scene {
     }
 
     create() {
+
+        this.timer = 0;
+        this.timerText = this.add.text(100, 200, '', {
+            fontFamily: '"Mochiy Pop P One"',
+            fontSize: '16px',
+            fill: '#ff0000'
+        });
+        this.timerText.setScrollFactor(0);
+        this.timerText.setDepth(50);
+
         //några onödiga variabler så jag kan använda dom i functions; phaser moment
         dis = this;
         Faser = Phaser;
@@ -316,10 +326,19 @@ class TutorialScene extends Phaser.Scene {
         this.hpBar.setScrollFactor(0);
         
         this.updateText();
+
+        this.time.addEvent({
+            delay: 1,
+            callback: ()=>{
+                this.timer++;
+            },
+            repeat: -1
+        })
     }
 
     // play scenens update metod
     update() {
+        this.updateText();
         this.cameras.main.startFollow(this.player);
            
         //#region Throw snowball
@@ -447,7 +466,7 @@ class TutorialScene extends Phaser.Scene {
             });*/
             this.scene.pause();
             this.scene.setVisible(false);
-            this.scene.launch('CaveScene');
+            this.scene.launch('CaveScene', {timer: this.timer});
             
         }
     }
@@ -470,6 +489,9 @@ class TutorialScene extends Phaser.Scene {
         this.text.setText(
             `HP: ${this.player.data.values.hp}`
         );
+        this.timerText.setText(
+            `Current timer: ${this.timer}`
+        )
         this.hpBar.width = 2*this.player.data.values.hp;
     }
 
