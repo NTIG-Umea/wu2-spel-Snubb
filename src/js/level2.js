@@ -503,7 +503,7 @@ class CaveScene extends Phaser.Scene {
         this.physics.add.overlap(this.clearFlag, this.player, clear, null, this);
         function clear(clearflag, player){
             if(cleared) {
-                this.grats = this.add.text(0, (this.game.config.height / 2) - 32, 'Congrats \n The game is over\n Goodbye', {
+                this.grats = this.add.text(0, (this.game.config.height / 2) - 100, `Congrats \n The game is over\n Goodbye\nYour final time is: ${this.timer}`, {
                     fontFamily: '"Mochiy Pop P One"',
                     fontSize: '48px',
                     fill: '#ff0000',
