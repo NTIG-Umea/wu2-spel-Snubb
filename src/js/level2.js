@@ -12,6 +12,7 @@ var bossDoor;
 var map;
 var tileset;
 var lasorArray = [];
+var tempTimer;
 
 function destroyBall(ball) {
     if(ball != null) {
@@ -37,8 +38,32 @@ class CaveScene extends Phaser.Scene {
     constructor() {
         super('CaveScene');
     }
+    init(data) {
+        tempTimer = data.timer;
+    }
 
     create() {
+        
+        this.timer = tempTimer;
+        this.timerText = this.add.text(100, 200, '', {
+            fontFamily: '"Mochiy Pop P One"',
+            fontSize: '16px',
+            fill: '#ff0000'
+        });
+        this.timerText.setScrollFactor(0);
+        this.timerText.setDepth(50);
+
+        this.time.addEvent({
+            delay: 1,
+            callback: ()=>{
+                this.timer++;
+                this.updateText();
+            },
+            repeat: -1
+        })
+
+        console.log(tempTimer);
+
         //några onödiga variabler så jag kan använda dom i functions; phaser moment
         dis = this;
         Faser = Phaser;
@@ -501,6 +526,7 @@ class CaveScene extends Phaser.Scene {
     // play scenens update metod
     update() {
 
+
         this.graphics.clear();
            
         //#region Throw snowball
@@ -808,6 +834,9 @@ class CaveScene extends Phaser.Scene {
         this.text.setText(
             `HP: ${this.player.data.values.hp}`
         );
+        this.timerText.setText(
+            `Current timer: ${this.timer}`
+        )
         this.hpBar.width = 2*this.player.data.values.hp;
     }
 
