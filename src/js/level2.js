@@ -13,6 +13,7 @@ var map;
 var tileset;
 var lasorArray = [];
 var tempTimer;
+var leaderBoard = [];
 
 function destroyBall(ball) {
     if(ball != null) {
@@ -43,9 +44,19 @@ class CaveScene extends Phaser.Scene {
     }
 
     create() {
+        if(JSON.parse(localStorage.getItem('localLeaderBoard') != null)) {
+            leaderBoard = JSON.parse(localStorage.getItem('localLeaderBoard'));
+        }
+        for(let i = 0; i < 5; i++) {
+            leaderBoard.push(999999);
+        }
+        leaderBoard.sort(function(a, b){a - b});
+        leaderBoard.length = 5;
+
+        this.updateLeaderBoard(leaderBoard);
         
         this.timer = tempTimer;
-        this.timerText = this.add.text(100, 200, '', {
+        this.timerText = this.add.text(this.game.config.width, 0, '', {
             fontFamily: '"Mochiy Pop P One"',
             fontSize: '16px',
             fill: '#ff0000'
@@ -114,7 +125,7 @@ class CaveScene extends Phaser.Scene {
         this.initBossAnims();
         this.initBatAnims();
 
-        this.imageBackground = this.add.image(-40, -25, 'newBackground').setOrigin(0).setScale(1.5, 1.45).setScrollFactor(0.3).setDepth(-102);
+        this.imageBackground = this.add.image(-40, -25, 'newnewBackground').setOrigin(0).setScale(1.5, 1).setScrollFactor(0.3).setDepth(-102);
         this.backgroundProof = map.createLayer('BackgroundProof', tileset).setDepth(-101);
         this.background = map.createLayer('Background', tileset).setDepth(-100);
         
@@ -503,6 +514,13 @@ class CaveScene extends Phaser.Scene {
         this.physics.add.overlap(this.clearFlag, this.player, clear, null, this);
         function clear(clearflag, player){
             if(cleared) {
+                cleared = false;
+                leaderBoard.push(this.timer);
+                leaderBoard.sort(function(a, b){return a - b});
+                leaderBoard.length = 5;
+                localStorage.setItem('localLeaderBoard', JSON.stringify(leaderBoard));
+
+                dis.updateLeaderBoard(leaderBoard);
                 this.grats = this.add.text(0, (this.game.config.height / 2) - 100, `Congrats \n The game is over\n Goodbye\nYour final time is: ${this.timer}`, {
                     fontFamily: '"Mochiy Pop P One"',
                     fontSize: '48px',
@@ -513,8 +531,6 @@ class CaveScene extends Phaser.Scene {
                 });
                 this.grats.setScrollFactor(0);
                 this.scene.pause();
-            } else {
-                console.log("NOT CLEARED");
             }
         }
 
@@ -827,6 +843,16 @@ class CaveScene extends Phaser.Scene {
         
         //#endregion
     }
+
+    updateLeaderBoard(array) {
+        try{
+            document.querySelector('#first').textContent = `1: ${array[0]}`;
+            document.querySelector('#second').textContent = `2: ${array[1]}`;
+            document.querySelector('#third').textContent = `3: ${array[2]}`;
+            document.querySelector('#fourth').textContent = `4: ${array[3]}`;
+            document.querySelector('#fifth').textContent = `5: ${array[4]}`;
+        } catch { }
+    }
         
        
     // metoden updateText för att uppdatera overlaytexten i spelet
@@ -835,7 +861,7 @@ class CaveScene extends Phaser.Scene {
             `HP: ${this.player.data.values.hp}`
         );
         this.timerText.setText(
-            `Current timer: ${this.timer}`
+            `${this.timer}`
         )
         this.hpBar.width = 2*this.player.data.values.hp;
     }

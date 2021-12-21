@@ -11,6 +11,7 @@ class PreloadScene extends Phaser.Scene {
         this.load.audio('vineBoom', '/sounds/VineBoom.mp3');
         this.load.image('background', '/images/background.png');
         this.load.image('newBackground', '/images/BakgrundNordpolen.png');
+        this.load.image('newnewBackground', '/images/ssfasf.jpg');
         this.load.image('spike', '/images/spike.png');
         this.load.image('snowball', './images/snowball.png');
         this.load.image('rock', './images/rock.png');

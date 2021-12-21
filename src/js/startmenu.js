@@ -2,6 +2,7 @@ var testTrigger = false;
 var lvl1trigger = false;
 var lvl2trigger = false;
 var lvl3trigger = false;
+var leaderBoard = [];
 
 class PreloadScene extends Phaser.Scene {
     constructor() {
@@ -9,10 +10,19 @@ class PreloadScene extends Phaser.Scene {
     }
 
     create() {
+        if(JSON.parse(localStorage.getItem('localLeaderBoard') != null)) {
+            leaderBoard = JSON.parse(localStorage.getItem('localLeaderBoard'));
+        }
+        for(let i = 0; i < 5; i++) {
+            leaderBoard.push(999999);
+        }
+        leaderBoard.sort(function(a, b){a - b});
+        leaderBoard.length = 5;
+        this.updateLeaderBoard(leaderBoard);
     
 
         this.background = this.add.image(0, 0, 'newBackground').setOrigin(0).setScale(1, 1.7);    
-        this.text = this.add.text(0, (this.game.config.height / 2) - 64, 'Select stage', {
+        this.text = this.add.text(0, (this.game.config.height / 2) - 64, 'Take your revenge', {
             fontFamily: '"Mochiy Pop P One"',
             fontSize: '64px',
             fill: '#ff0000',
@@ -71,6 +81,15 @@ class PreloadScene extends Phaser.Scene {
             this.scene.setVisible(false);
             this.scene.launch('CaveScene');
         }
+    }
+    updateLeaderBoard(array) {
+        try{
+            document.querySelector('#first').textContent = `1: ${array[0]}`;
+            document.querySelector('#second').textContent = `2: ${array[1]}`;
+            document.querySelector('#third').textContent = `3: ${array[2]}`;
+            document.querySelector('#fourth').textContent = `4: ${array[3]}`;
+            document.querySelector('#fifth').textContent = `5: ${array[4]}`;
+        } catch { }
     }
 }
 
