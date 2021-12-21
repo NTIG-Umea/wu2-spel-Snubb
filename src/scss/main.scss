@@ -6,6 +6,10 @@ html, body {
     height: 100%;
 }
 
+body {
+    display: flex;
+}
+
 nav, footer {
     width: 800px;
     //padding: 1rem 0;
@@ -17,4 +21,13 @@ canvas {
 }
 h1 {
     margin: 0;
+    font-size: 3rem;
+}
+li{
+    font-size: 2rem;
+    margin-top: 2rem;
+}
+.Leaderboard-ul {
+    list-style: none;
+
 }

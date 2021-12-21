@@ -8,6 +8,7 @@ var Faser;
 var snowCrashEmitter;
 var playerr;
 var cleared = false;
+var leaderBoard = [];
 
 function destroyBall(ball) {
     if(ball != null) {
@@ -37,7 +38,7 @@ class TutorialScene extends Phaser.Scene {
     create() {
 
         this.timer = 0;
-        this.timerText = this.add.text(100, 200, '', {
+        this.timerText = this.add.text(this.game.config.width - 50, 25, '', {
             fontFamily: '"Mochiy Pop P One"',
             fontSize: '16px',
             fill: '#ff0000'
@@ -490,7 +491,7 @@ class TutorialScene extends Phaser.Scene {
             `HP: ${this.player.data.values.hp}`
         );
         this.timerText.setText(
-            `Current timer: ${this.timer}`
+            `${this.timer}`
         )
         this.hpBar.width = 2*this.player.data.values.hp;
     }
